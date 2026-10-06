@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YUSUPHU ODDS VIP</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: #222;
+      padding: 25px;
+      border-radius: 15px;
+      margin-top: 25px;
+    }
+
+    button {
+      padding: 14px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>YUSUPHU ODDS VIP</h1>
+
+    <p>Karibu kwenye mfumo wa VIP Odds</p>
+
+    <div class="card">
+      <h2>VIP ODDS</h2>
+
+      <p>Jiunge kupata odds za VIP.</p>
+
+      <button onclick="checkSystem()">
+        Angalia Mfumo
+      </button>
+
+      <p id="result"></p>
+    </div>
+
+  </div>
+
+  <script>
+    async function checkSystem() {
+      const result = document.getElementById("result");
+
+      try {
+        const response = await fetch("/api/health");
+        const data = await response.json();
+
+        result.innerText = data.message;
+      } catch (error) {
+        result.innerText = "Server haijapatikana.";
+      }
+    }
+  </script>
+
+</body>
+</html>
