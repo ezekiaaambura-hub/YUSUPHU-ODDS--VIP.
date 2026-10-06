@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YUSUPHU ODDS VIP</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f6f8; color: #111; }
+    header { background: #111827; color: white; padding: 22px; text-align: center; }
+    main { max-width: 700px; margin: 25px auto; padding: 0 16px; }
+    .card { background: white; border-radius: 14px; padding: 18px; margin: 14px 0; box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+    .pick { font-weight: bold; font-size: 20px; }
+    .odd { float: right; font-weight: bold; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>YUSUPHU ODDS VIP</h1>
+  <p>VIP Odds Dashboard</p>
+</header>
+<main>
+  <h2>Today's VIP Odds</h2>
+  <div id="odds">Inapakia...</div>
+</main>
+<script>
+fetch("/api/odds")
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById("odds").innerHTML = data.odds.map(o => `
+      <div class="card">
+        <div><strong>${o.match}</strong></div>
+        <p>${o.market}</p>
+        <span class="pick">${o.pick}</span>
+        <span class="odd">${o.odd}</span>
+      </div>
+    `).join("");
+  })
+  .catch(() => {
+    document.getElementById("odds").textContent = "Imeshindikana kupakia odds.";
+  });
+</script>
+</body>
+</html>
