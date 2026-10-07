@@ -589,8 +589,43 @@ function show(id) {
   }
 
   if (id === "admin") {
-    loadAdmin();
+    async function adminLogin(event) {
+
+  event.preventDefault();
+
+  const password =
+    document.getElementById("adminPassword").value;
+
+  const response = await fetch("/api/admin/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      password: password
+    })
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+
+    document.getElementById("adminMessage").innerHTML =
+      '<p style="color:red;">❌ ' +
+      data.message +
+      '</p>';
+
+    return;
   }
+
+  sessionStorage.setItem("adminToken", data.token);
+
+  document.getElementById("adminMessage").innerHTML =
+    '<p style="color:green;">✅ Admin login imefanikiwa!</p>';
+
+  loadAdmin();
+}
+
 
   window.scrollTo(0, 0);
 }
