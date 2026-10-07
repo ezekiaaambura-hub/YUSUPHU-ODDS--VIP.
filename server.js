@@ -2,33 +2,22 @@ const express = require("express");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const ADMIN_PASSWORD = "Yusuphu@2026";
+
+// ===============================
+// SETTINGS
+// ===============================
+const PAYMENT_NUMBER = "0793401886";
+const PAYMENT_AMOUNT = 5000;
+
+// Weka password yako ya Admin hapa
+const ADMIN_PASSWORD = "WEKA_PASSWORD_YAKO_HAPA";
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-let adminTokens = new Set();
 
-app.post("/api/admin/login", function(req, res) {
-
-  const { password } = req.body;
-
-  if (password !== ADMIN_PASSWORD) {
-    return res.status(401).json({
-      success: false,
-      message: "Password sio sahihi."
-    });
-  }
-
-  const token =
-    Date.now().toString(36) +
-    Math.random().toString(36).substring(2);
-
-  adminTokens.add(token);
-
-  res.json({
-    success: true,
-    token: token
-  });
-});
+// ===============================
+// DATA
+// ===============================
 let odds = [
   {
     id: 1,
@@ -54,432 +43,238 @@ let odds = [
 ];
 
 let payments = [];
+let adminTokens = new Set();
 
-const html = `<!doctype html>
+// ===============================
+// HOME PAGE
+// ===============================
+app.get("/", (req, res) => {
+  res.send(`
+<!DOCTYPE html>
 <html lang="sw">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YUSUPHU ODDS VIP</title>
 
 <style>
-
-*{
-box-sizing:border-box
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #07111f;
+  color: white;
 }
 
-body{
-margin:0;
-background:#07111f;
-color:#fff;
-font-family:Arial,sans-serif
+header {
+  background: #0d6efd;
+  padding: 20px;
+  text-align: center;
 }
 
-.top{
-padding:15px 5%;
-background:#0b1728;
-display:flex;
-justify-content:space-between;
-gap:10px;
-flex-wrap:wrap;
-border-bottom:1px solid #20324a
+header h1 {
+  margin: 0;
 }
 
-.brand{
-font-size:21px;
-font-weight:900
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px;
+  background: #101c2d;
+  flex-wrap: wrap;
 }
 
-.brand b{
-color:#29d17d
+button {
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
-.nav button{
-background:none;
-border:0;
-color:#fff;
-padding:8px;
-cursor:pointer;
-font-size:14px
+.navbtn {
+  background: #198754;
+  color: white;
 }
 
-.page{
-display:none;
-max-width:1050px;
-margin:auto;
-padding:30px 5%
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 20px;
 }
 
-.active{
-display:block
+.box {
+  background: #111f33;
+  padding: 20px;
+  margin: 15px 0;
+  border-radius: 12px;
 }
 
-.hero,
-.box,
-.card,
-.odd,
-.admin{
-background:#0d1b2d;
-border:1px solid #20324a;
-border-radius:18px;
-padding:25px
+input {
+  width: 100%;
+  padding: 13px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border-radius: 7px;
+  border: none;
 }
 
-.hero{
-background:linear-gradient(135deg,#12365a,#07111f);
-padding:45px 30px
+.btn {
+  background: #ffc107;
+  color: black;
 }
 
-.tag{
-color:#29d17d;
-font-weight:bold;
-letter-spacing:1px
+.vip {
+  background: #198754;
+  color: white;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 10px;
 }
 
-h1{
-font-size:clamp(38px,8vw,70px);
-line-height:1;
-margin:12px 0
+.odd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-h2{
-font-size:32px
+.odd-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffc107;
 }
 
-.hero p{
-color:#cbd5e1;
-font-size:18px;
-max-width:700px
+.hidden {
+  display: none;
 }
 
-.btn{
-background:#29d17d;
-border:0;
-border-radius:10px;
-padding:14px 18px;
-font-weight:bold;
-cursor:pointer
+.danger {
+  background: #dc3545;
+  color: white;
 }
 
-.cards{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:15px;
-margin-top:15px
+.success {
+  color: #00ff88;
 }
 
-.cards p{
-color:#aebdce
+.error {
+  color: #ff5555;
 }
 
-.box{
-margin-top:15px
+footer {
+  text-align: center;
+  padding: 25px;
+  color: #aaa;
 }
-
-.form{
-display:grid;
-grid-template-columns:1fr 1fr 1fr auto;
-gap:10px
-}
-
-.form input{
-padding:13px;
-background:#07111f;
-color:#fff;
-border:1px solid #2a405b;
-border-radius:9px;
-width:100%
-}
-
-.odds{
-display:grid;
-gap:12px
-}
-
-.odd{
-display:flex;
-justify-content:space-between;
-align-items:center
-}
-
-.odd p{
-color:#aebdce
-}
-
-.value{
-font-size:28px;
-color:#6ee7a5;
-font-weight:bold
-}
-
-.admin{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-top:10px;
-gap:15px
-}
-
-.delete{
-background:#351414;
-color:#fecaca;
-border:1px solid #7f1d1d;
-padding:8px;
-border-radius:7px;
-cursor:pointer
-}
-
-.msg{
-color:#6ee7a5;
-padding:10px
-}
-
-.warning{
-color:#f6c453
-}
-
-.payment{
-background:#101f32;
-border:1px solid #29415e;
-border-radius:12px;
-padding:15px;
-margin-top:10px
-}
-
-.pending{
-color:#f6c453;
-font-weight:bold
-}
-
-footer{
-text-align:center;
-padding:30px;
-color:#718198
-}
-
-@media(max-width:700px){
-
-.cards{
-grid-template-columns:1fr
-}
-
-.form{
-grid-template-columns:1fr
-}
-
-.odd{
-align-items:flex-start;
-flex-direction:column
-}
-
-.admin{
-align-items:flex-start;
-flex-direction:column
-}
-
-}
-
 </style>
-
 </head>
 
 <body>
 
-<header class="top">
-
-<div class="brand">
-YUSUPHU <b>ODDS VIP</b>
-</div>
-
-<div class="nav">
-
-<button onclick="show('home')">
-🏠 HOME
-</button>
-
-<button onclick="show('vip')">
-⭐ VIP ODDS
-</button>
-
-<button onclick="show('admin')">
-⚙️ ADMIN
-</button>
-
-</div>
-
+<header>
+  <h1>⚽ YUSUPHU ODDS VIP</h1>
+  <p>VIP Football Predictions</p>
 </header>
 
+<nav>
+  <button class="navbtn" onclick="showPage('home')">🏠 HOME</button>
+  <button class="navbtn" onclick="showPage('payment')">💳 LIPA TSh 5,000</button>
+  <button class="navbtn" onclick="showPage('vip')">⭐ VIP ODDS</button>
+  <button class="navbtn" onclick="showPage('admin')">🔐 ADMIN</button>
+</nav>
 
-<section id="home" class="page active">
+<div class="container">
 
-<div class="hero">
+<!-- HOME -->
+<section id="home">
 
-<div class="tag">
-VIP FOOTBALL PREDICTIONS
-</div>
-
-<h1>
-Karibu YUSUPHU ODDS VIP
-</h1>
+<div class="box">
+<h2>Karibu YUSUPHU ODDS VIP</h2>
 
 <p>
-Jiunge na huduma ya VIP Odds kwa TSh 5,000.
+Pata odds na prediction maalum za VIP.
 </p>
 
-<button
-class="btn"
-onclick="document.getElementById('pay').scrollIntoView({behavior:'smooth'})">
-
-💳 LIPA TSh 5,000
-
+<button class="btn" onclick="showPage('payment')">
+LIPA TSh 5,000
 </button>
+</div>
 
+<div class="box">
+<h3>📢 Jinsi ya kupata VIP Odds</h3>
+
+<p>1. Lipa TSh 5,000</p>
+<p>2. Tumia namba: <strong>0793401886</strong></p>
+<p>3. Tuma kumbukumbu ya malipo</p>
+<p>4. Subiri uthibitisho wa Admin</p>
+<p>5. Fungua VIP Odds</p>
+</div>
+
+</section>
+
+
+<!-- PAYMENT -->
+<section id="payment" class="hidden">
 
 <div class="box">
 
-<h3>💳 JINSI YA KULIPA</h3>
+<h2>💳 MALIPO YA VIP</h2>
 
-<p>
-Lipa <b>TSh 5,000</b> kwenda kwenye namba:
-</p>
+<p>Weka malipo ya:</p>
+
+<h1>TSh 5,000</h1>
+
+<p>Namba ya malipo:</p>
 
 <h2>📱 0793401886</h2>
 
 <p>
-Baada ya kufanya malipo, utapokea
-<b>Reference/Transaction ID</b> kupitia SMS.
+Baada ya kufanya malipo, weka namba ya kumbukumbu hapa chini.
 </p>
 
-<p>
-Kisha bonyeza <b>NIMEFANYA MALIPO</b>
-na uweke Reference hiyo kwenye fomu hapa chini.
-</p>
-
-</div>
-
-</div>
-
-
-<div class="cards">
-
-<div class="card">
-
-<h3>
-💰 Lipa TSh 5,000
-</h3>
-
-<p>
-Fanya malipo kwa namba rasmi ya huduma.
-</p>
-
-</div>
-
-
-<div class="card">
-
-<h3>
-🧾 Reference
-</h3>
-
-<p>
-Weka Reference/Transaction ID uliyopewa baada ya malipo.
-</p>
-
-</div>
-
-
-<div class="card">
-
-<h3>
-⭐ VIP Odds
-</h3>
-
-<p>
-Angalia odds zako baada ya kuwasilisha taarifa ya malipo.
-</p>
-
-</div>
-
-</div>
-
-
-<div id="pay" class="box">
-
-<h2>
-💳 NIMEFANYA MALIPO
-</h2>
-
-<form
-class="form"
-onsubmit="pay(event)"
->
+<form onsubmit="submitPayment(event)">
 
 <input
-id="phone"
-placeholder="Namba ya simu iliyolipia"
-required
->
-
-<input
-id="amount"
-type="number"
-value="5000"
-min="5000"
-required
->
-
-<input
-id="ref"
-placeholder="Reference ya malipo"
+id="paymentRef"
+placeholder="Payment Reference"
 required
 >
 
 <button class="btn">
-TUMA
+NIMEFANYA MALIPO
 </button>
 
 </form>
 
-<div id="msg"></div>
+<div id="paymentMessage"></div>
 
 </div>
 
 </section>
 
 
-<section id="vip" class="page">
+<!-- VIP -->
+<section id="vip" class="hidden">
 
-<div class="tag">
-PRIVATE PICKS
-</div>
-
-<h2>
-⭐ VIP ODDS
-</h2>
-
-<div id="odds" class="odds">
-</div>
-
-</section>
-
-
-<section id="admin" class="page">
-
-<div class="tag">
-MANAGEMENT
-</div>
-
-<h2>
-⚙️ ADMIN PANEL
-</h2>
 <div class="box">
 
-<h3>🔐 ADMIN LOGIN</h3>
+<h2>⭐ VIP ODDS</h2>
+
+<p>Odds zinazopatikana sasa:</p>
+
+<div id="oddsList"></div>
+
+</div>
+
+</section>
+
+
+<!-- ADMIN -->
+<section id="admin" class="hidden">
+
+<div class="box" id="loginBox">
+
+<h2>🔐 ADMIN LOGIN</h2>
 
 <form onsubmit="adminLogin(event)">
 
@@ -500,39 +295,24 @@ INGIA ADMIN
 
 </div>
 
-<div class="box">
 
-<h3>
-💳 MALIPO YALIYOWASILISHWA
-</h3>
+<div class="box hidden" id="adminPanel">
 
-<div id="payments">
-Inapakia malipo...
-</div>
+<h2>⚙️ ADMIN PANEL</h2>
 
-</div>
+<h3>➕ Ongeza VIP Odd</h3>
 
-
-<div class="box">
-
-<h3>
-➕ ONGEZA VIP ODDS
-</h3>
-
-<form
-class="form"
-onsubmit="add(event)"
->
+<form onsubmit="addOdd(event)">
 
 <input
 id="match"
-placeholder="Match"
+placeholder="Mfano: Arsenal vs Chelsea"
 required
 >
 
 <input
 id="pick"
-placeholder="Pick"
+placeholder="Mfano: Over 2.5"
 required
 >
 
@@ -540,73 +320,150 @@ required
 id="odd"
 type="number"
 step="0.01"
-placeholder="Odd"
+placeholder="Odd mfano 1.85"
 required
 >
 
 <button class="btn">
-ONGEZA
+ONGEZA ODDS
 </button>
 
 </form>
 
+<hr>
 
-<div id="adminlist">
+<h3>📋 VIP Odds</h3>
+
+<div id="adminOdds"></div>
+
+<hr>
+
+<h3>💰 MALIPO</h3>
+
+<div id="payments"></div>
+
 </div>
-
-</div>
-
-
-<p class="warning">
-
-⚠️ Admin login/password tutaongeza
-katika hatua inayofuata.
-
-</p>
 
 </section>
 
+</div>
 
 <footer>
-
-© 2026 YUSUPHU ODDS VIP
-
+YUSUPHU ODDS VIP © 2026
 </footer>
 
 
 <script>
 
-function show(id) {
-function show(id) {
+let adminToken = sessionStorage.getItem("adminToken");
 
-  document.querySelectorAll(".page").forEach(function(page) {
-    page.classList.remove("active");
-  });
 
-  document.getElementById(id).classList.add("active");
+function showPage(page) {
 
-  if (id === "vip") {
+  document.querySelectorAll(".container section")
+    .forEach(section => {
+      section.classList.add("hidden");
+    });
+
+  document.getElementById(page)
+    .classList.remove("hidden");
+
+  if (page === "vip") {
     loadOdds();
   }
 
-  if (id === "admin") {
-    document.getElementById("adminMessage").innerHTML = "";
-  }
+  if (page === "admin" && adminToken) {
+    document.getElementById("loginBox")
+      .classList.add("hidden");
 
-  window.scrollTo(0, 0);
+    document.getElementById("adminPanel")
+      .classList.remove("hidden");
+
+    loadAdmin();
+  }
 }
-  document.querySelectorAll(".page").forEach(function(page) {
-    page.classList.remove("active");
+
+
+// ===============================
+// LOAD ODDS
+// ===============================
+async function loadOdds() {
+
+  const response = await fetch("/api/odds");
+  const data = await response.json();
+
+  const list = document.getElementById("oddsList");
+
+  list.innerHTML = data.map(o => {
+
+    return \`
+      <div class="vip">
+        <div class="odd">
+          <div>
+            <strong>\${escapeHtml(o.match)}</strong>
+            <br>
+            <span>\${escapeHtml(o.pick)}</span>
+          </div>
+
+          <div class="odd-value">
+            \${Number(o.odd).toFixed(2)}
+          </div>
+        </div>
+      </div>
+    \`;
+
+  }).join("");
+}
+
+
+// ===============================
+// PAYMENT
+// ===============================
+async function submitPayment(event) {
+
+  event.preventDefault();
+
+  const reference =
+    document.getElementById("paymentRef").value;
+
+  const response = await fetch("/api/payment", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      reference: reference
+    })
+
   });
 
-  document.getElementById(id).classList.add("active");
+  const data = await response.json();
 
-  if (id === "vip") {
-    loadOdds();
+  if (data.success) {
+
+    document.getElementById("paymentMessage")
+      .innerHTML =
+      '<p class="success">✅ Malipo yamepokelewa. Subiri Admin athibitishe.</p>';
+
+    document.getElementById("paymentRef").value = "";
+
+  } else {
+
+    document.getElementById("paymentMessage")
+      .innerHTML =
+      '<p class="error">❌ ' + data.message + '</p>';
+
   }
+}
 
-  if (id === "admin") {
-    async function adminLogin(event) {
+
+// ===============================
+// ADMIN LOGIN
+// ===============================
+async function adminLogin(event) {
 
   event.preventDefault();
 
@@ -614,158 +471,76 @@ function show(id) {
     document.getElementById("adminPassword").value;
 
   const response = await fetch("/api/admin/login", {
+
     method: "POST",
+
     headers: {
       "Content-Type": "application/json"
     },
+
     body: JSON.stringify({
       password: password
     })
+
   });
 
   const data = await response.json();
 
   if (!data.success) {
 
-    document.getElementById("adminMessage").innerHTML =
-      '<p style="color:red;">❌ ' +
-      data.message +
-      '</p>';
+    document.getElementById("adminMessage")
+      .innerHTML =
+      '<p class="error">❌ Password sio sahihi.</p>';
 
     return;
   }
 
-  sessionStorage.setItem("adminToken", data.token);
+  adminToken = data.token;
 
-  document.getElementById("adminMessage").innerHTML =
-    '<p style="color:green;">✅ Admin login imefanikiwa!</p>';
+  sessionStorage.setItem(
+    "adminToken",
+    adminToken
+  );
+
+  document.getElementById("loginBox")
+    .classList.add("hidden");
+
+  document.getElementById("adminPanel")
+    .classList.remove("hidden");
 
   loadAdmin();
 }
 
 
-  window.scrollTo(0, 0);
-}
-
-
-async function loadOdds() {
-
-  const response = await fetch("/api/odds");
-  const data = await response.json();
-
-  document.getElementById("odds").innerHTML =
-    data.odds.map(function(item) {
-
-      return '<article class="odd">' +
-        '<div>' +
-        '<h3>' + item.match + '</h3>' +
-        '<p>' + item.pick + ' · ' + item.status + '</p>' +
-        '</div>' +
-        '<div class="value">' +
-        Number(item.odd).toFixed(2) +
-        '</div>' +
-        '</article>';
-
-    }).join("");
-
-}
-
-
-async function loadAdmin() {
-
-  const response = await fetch("/api/odds");
-  const data = await response.json();
-
-  document.getElementById("adminlist").innerHTML =
-    data.odds.map(function(item) {
-
-      return '<div class="admin">' +
-        '<span>' +
-        item.match +
-        ' — ' +
-        item.pick +
-        ' — ' +
-        Number(item.odd).toFixed(2) +
-        '</span>' +
-
-        '<button class="delete" onclick="deleteOdd(' +
-        item.id +
-        ')">' +
-        'Futa' +
-        '</button>' +
-
-        '</div>';
-
-    }).join("");
-
-
-  const paymentResponse =
-    await fetch("/api/payments");
-
-  const paymentData =
-    await paymentResponse.json();
-
-
-  if (!paymentData.payments.length) {
-
-    document.getElementById("payments").innerHTML =
-      "Hakuna malipo yaliyowasilishwa bado.";
-
-    return;
-  }
-
-
-  document.getElementById("payments").innerHTML =
-    paymentData.payments.map(function(payment) {
-
-      return '<div class="payment">' +
-
-        '<div>📱 Simu: ' +
-        payment.phone +
-        '</div>' +
-
-        '<div>💰 Kiasi: TSh ' +
-        payment.amount +
-        '</div>' +
-
-        '<div>🧾 Reference: ' +
-        payment.reference +
-        '</div>' +
-
-        '<div class="pending">⏳ Status: ' +
-        payment.status +
-        '</div>' +
-
-        '</div>';
-
-    }).join("");
-
-}
-
-
-async function add(event) {
+// ===============================
+// ADD ODD
+// ===============================
+async function addOdd(event) {
 
   event.preventDefault();
+
+  const match =
+    document.getElementById("match").value;
+
+  const pick =
+    document.getElementById("pick").value;
+
+  const odd =
+    document.getElementById("odd").value;
 
   const response = await fetch("/api/odds", {
 
     method: "POST",
 
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + adminToken
     },
 
     body: JSON.stringify({
-
-      match:
-        document.getElementById("match").value,
-
-      pick:
-        document.getElementById("pick").value,
-
-      odd:
-        document.getElementById("odd").value
-
+      match,
+      pick,
+      odd
     })
 
   });
@@ -774,310 +549,359 @@ async function add(event) {
 
   if (!response.ok) {
 
-    alert(data.message || "Imeshindikana.");
+    alert(data.error || "Imeshindikana");
 
     return;
   }
 
-  event.target.reset();
+  document.getElementById("match").value = "";
+  document.getElementById("pick").value = "";
+  document.getElementById("odd").value = "";
 
   loadAdmin();
 
   alert("✅ Odd imeongezwa.");
-
 }
 
 
+// ===============================
+// ADMIN DATA
+// ===============================
+async function loadAdmin() {
+
+  const response = await fetch("/api/odds");
+
+  const data = await response.json();
+
+  document.getElementById("adminOdds").innerHTML =
+    data.map(o => \`
+
+      <div class="box">
+
+        <strong>\${escapeHtml(o.match)}</strong>
+
+        <br>
+
+        \${escapeHtml(o.pick)}
+        —
+        <strong>\${Number(o.odd).toFixed(2)}</strong>
+
+        <br><br>
+
+        <button
+          class="danger"
+          onclick="deleteOdd(\${o.id})">
+          FUTA
+        </button>
+
+      </div>
+
+    \`).join("");
+
+  const paymentResponse =
+    await fetch("/api/payments");
+
+  const paymentData =
+    await paymentResponse.json();
+
+  document.getElementById("payments").innerHTML =
+    paymentData.map(p => \`
+
+      <div class="box">
+
+        <strong>Reference:</strong>
+        \${escapeHtml(p.reference)}
+
+        <br>
+
+        <strong>Status:</strong>
+        \${escapeHtml(p.status)}
+
+      </div>
+
+    \`).join("");
+}
+
+
+// ===============================
+// DELETE ODD
+// ===============================
 async function deleteOdd(id) {
+
+  if (!confirm("Unataka kufuta odd hii?")) {
+    return;
+  }
 
   const response = await fetch(
     "/api/odds/" + id,
     {
-      method: "DELETE"
+      method: "DELETE",
+      headers: {
+        "Authorization":
+          "Bearer " + adminToken
+      }
     }
   );
 
   if (response.ok) {
     loadAdmin();
   }
-
 }
 
 
-async function pay(event) {
+// ===============================
+// ESCAPE HTML
+// ===============================
+function escapeHtml(value) {
 
-  event.preventDefault();
+  return String(value).replace(
+    /[&<>"']/g,
+    function(c) {
 
-  const response = await fetch(
-    "/api/payment/verify",
-    {
-
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json"
-      },
-
-      body: JSON.stringify({
-
-        phone:
-          document.getElementById("phone").value,
-
-        amount:
-          Number(
-            document.getElementById("amount").value
-          ),
-
-        reference:
-          document.getElementById("ref").value
-
-      })
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[c];
 
     }
   );
 
-  const data = await response.json();
-
-
-  if (data.success) {
-
-    document.getElementById("msg").innerHTML =
-      '<div class="msg">' +
-      '✅ Taarifa ya malipo imepokelewa. ' +
-      'Reference: ' +
-      data.reference +
-      '</div>';
-
-    document.getElementById("phone").value = "";
-    document.getElementById("ref").value = "";
-
-  } else {
-
-    document.getElementById("msg").innerHTML =
-      '<div class="msg">❌ ' +
-      data.message +
-      '</div>';
-
-  }
-
 }
-
-
-loadOdds();
 
 </script>
 
 </body>
-
-</html>`;
-
-
-app.get("/", function(req, res) {
-
-  res.send(html);
-
+</html>
+  `);
 });
 
 
-app.get("/api/health", function(req, res) {
+// ===============================
+// HEALTH CHECK
+// ===============================
+app.get("/api/health", (req, res) => {
 
   res.json({
-
-    success: true,
-
-    status: "ok",
-
+    ok: true,
     app: "YUSUPHU ODDS VIP"
-
   });
 
 });
 
 
-app.get("/api/odds", function(req, res) {
+// ===============================
+// GET ODDS
+// ===============================
+app.get("/api/odds", (req, res) => {
+
+  res.json(odds);
+
+});
+
+
+// ===============================
+// ADMIN AUTH
+// ===============================
+function requireAdmin(req, res, next) {
+
+  const header =
+    req.headers.authorization || "";
+
+  const token =
+    header.startsWith("Bearer ")
+      ? header.substring(7)
+      : "";
+
+  if (!adminTokens.has(token)) {
+
+    return res.status(401).json({
+      error: "Admin login required."
+    });
+
+  }
+
+  next();
+
+}
+
+
+// ===============================
+// ADMIN LOGIN
+// ===============================
+app.post("/api/admin/login", (req, res) => {
+
+  const { password } = req.body;
+
+  if (password !== ADMIN_PASSWORD) {
+,Maritaezekia,11
+    return res.status(401).json({
+      success: false,
+      message: "Password sio sahihi."
+    });
+
+  }
+
+  const token =
+    Date.now().toString(36) +
+    Math.random()
+      .toString(36)
+      .substring(2);
+
+  adminTokens.add(token);
 
   res.json({
-
     success: true,
-
-    odds: odds
-
+    token: token
   });
 
 });
 
 
-app.post("/api/odds", function(req, res) {
+// ===============================
+// ADD ODDS
+// ===============================
+app.post(
+  "/api/odds",
+  requireAdmin,
+  (req, res) => {
 
-  const { match, pick, odd } = req.body;
+    const { match, pick, odd } = req.body;
+
+    if (!match || !pick || !odd) {
+
+      return res.status(400).json({
+        error: "Jaza match, pick na odd."
+      });
+
+    }
+
+    const item = {
+
+      id: Date.now(),
+
+      match: match,
+
+      pick: pick,
+
+      odd: Number(odd),
+
+      status: "VIP"
+
+    };
+
+    odds.unshift(item);
+
+    res.status(201).json(item);
+
+  }
+);
 
 
-  if (!match || !pick || !odd) {
+// ===============================
+// DELETE ODDS
+// ===============================
+app.delete(
+  "/api/odds/:id",
+  requireAdmin,
+  (req, res) => {
+
+    const id =
+      Number(req.params.id);
+
+    const before =
+      odds.length;
+
+    odds =
+      odds.filter(
+        item => item.id !== id
+      );
+
+    if (odds.length === before) {
+
+      return res.status(404).json({
+        error: "Odd haijapatikana."
+      });
+
+    }
+
+    res.json({
+      success: true
+    });
+
+  }
+);
+
+
+// ===============================
+// PAYMENT SUBMISSION
+// ===============================
+app.post("/api/payment", (req, res) => {
+
+  const { reference } = req.body;
+
+  if (!reference) {
 
     return res.status(400).json({
-
       success: false,
-
-      message: "Jaza match, pick na odd."
-
+      message: "Weka Payment Reference."
     });
 
   }
 
-
-  const item = {
+  payments.unshift({
 
     id: Date.now(),
-
-    match: match,
-
-    pick: pick,
-
-    odd: Number(odd),
-
-    status: "VIP"
-
-  };
-
-
-  odds.unshift(item);
-
-
-  res.status(201).json({
-
-    success: true,
-
-    odd: item
-
-  });
-
-});
-
-
-app.delete("/api/odds/:id", function(req, res) {
-
-  const id = Number(req.params.id);
-
-  const before = odds.length;
-
-
-  odds = odds.filter(function(item) {
-
-    return item.id !== id;
-
-  });
-
-
-  if (before === odds.length) {
-
-    return res.status(404).json({
-
-      success: false,
-
-      message: "Odd haijapatikana."
-
-    });
-
-  }
-
-
-  res.json({
-
-    success: true,
-
-    message: "Odd imefutwa."
-
-  });
-
-});
-
-
-app.post("/api/payment/verify", function(req, res) {
-
-  const { phone, amount, reference } = req.body;
-
-
-  if (!phone || !amount || !reference) {
-
-    return res.status(400).json({
-
-      success: false,
-
-      message:
-        "Jaza namba ya simu, kiasi na reference."
-
-    });
-
-  }
-
-
-  if (Number(amount) < 5000) {
-
-    return res.status(400).json({
-
-      success: false,
-
-      message:
-        "Kiasi kinachotakiwa ni TSh 5,000."
-
-    });
-
-  }
-
-
-  const payment = {
-
-    id: Date.now(),
-
-    phone: phone,
-
-    amount: Number(amount),
 
     reference: reference,
 
+    amount: PAYMENT_AMOUNT,
+
+    phone: PAYMENT_NUMBER,
+
     status: "PENDING"
 
-  };
-
-
-  payments.push(payment);
-
+  });
 
   res.json({
 
     success: true,
 
-    message:
-      "Taarifa ya malipo imepokelewa.",
-
-    phone: phone,
-
-    amount: Number(amount),
-
-    reference: reference
+    message: "Malipo yamepokelewa."
 
   });
 
 });
 
 
-app.get("/api/payments", function(req, res) {
+// ===============================
+// ADMIN PAYMENTS
+// ===============================
+app.get(
+  "/api/payments",
+  requireAdmin,
+  (req, res) => {
 
-  res.json({
+    res.json(payments);
 
-    success: true,
-
-    payments: payments
-
-  });
-
-});
+  }
+);
 
 
-app.listen(PORT, "0.0.0.0", function() {
+// ===============================
+// START SERVER
+// ===============================
+app.listen(
+  PORT,
+  "0.0.0.0",
+  () => {
 
-  console.log(
-    "YUSUPHU ODDS VIP running on port " + PORT
-  );
+    console.log(
+      "YUSUPHU ODDS VIP running on port " +
+      PORT
+    );
 
-});
+  }
+);
