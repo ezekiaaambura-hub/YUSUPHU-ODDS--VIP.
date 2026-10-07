@@ -577,7 +577,24 @@ katika hatua inayofuata.
 <script>
 
 function show(id) {
+function show(id) {
 
+  document.querySelectorAll(".page").forEach(function(page) {
+    page.classList.remove("active");
+  });
+
+  document.getElementById(id).classList.add("active");
+
+  if (id === "vip") {
+    loadOdds();
+  }
+
+  if (id === "admin") {
+    document.getElementById("adminMessage").innerHTML = "";
+  }
+
+  window.scrollTo(0, 0);
+}
   document.querySelectorAll(".page").forEach(function(page) {
     page.classList.remove("active");
   });
