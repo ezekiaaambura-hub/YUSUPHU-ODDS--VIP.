@@ -286,7 +286,7 @@ onclick="document.getElementById('pay').scrollIntoView({behavior:'smooth'})">
 
 <p>
 <b>Namba ya malipo:</b>
-WEKA NAMBA YA MALIPO HAPA
+WEKA NAMBA YA MALIPO HAPA 0793401886
 </p>
 
 </div>
