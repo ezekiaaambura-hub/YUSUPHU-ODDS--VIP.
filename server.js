@@ -2,10 +2,33 @@ const express = require("express");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-
+const ADMIN_PASSWORD = "Yusuphu@2026";
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+let adminTokens = new Set();
 
+app.post("/api/admin/login", function(req, res) {
+
+  const { password } = req.body;
+
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({
+      success: false,
+      message: "Password sio sahihi."
+    });
+  }
+
+  const token =
+    Date.now().toString(36) +
+    Math.random().toString(36).substring(2);
+
+  adminTokens.add(token);
+
+  res.json({
+    success: true,
+    token: token
+  });
+});
 let odds = [
   {
     id: 1,
@@ -454,7 +477,28 @@ MANAGEMENT
 <h2>
 ⚙️ ADMIN PANEL
 </h2>
+<div class="box">
 
+<h3>🔐 ADMIN LOGIN</h3>
+
+<form onsubmit="adminLogin(event)">
+
+<input
+id="adminPassword"
+type="password"
+placeholder="Ingiza Admin Password"
+required
+>
+
+<button class="btn">
+INGIA ADMIN
+</button>
+
+</form>
+
+<div id="adminMessage"></div>
+
+</div>
 
 <div class="box">
 
