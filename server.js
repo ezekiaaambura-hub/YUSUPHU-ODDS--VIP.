@@ -5,7 +5,7 @@ const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+let payments = [];
 let odds = [
   {
     id: 1,
@@ -420,7 +420,15 @@ MANAGEMENT
 <h2>
 ⚙️ ADMIN PANEL
 </h2>
+<div class="box">
 
+<h3>💳 MALIPO YALIYOWASILISHWA</h3>
+
+<div id="payments">
+Hakuna malipo yaliyowasilishwa bado.
+</div>
+
+</div>
 <div class="box">
 
 <form
@@ -500,7 +508,22 @@ async function loadOdds() {
 
   const response = await fetch("/api/odds");
   const data = await response.json();
+const paymentResponse = await fetch("/api/payments");
+const paymentData = await paymentResponse.json();
 
+document.getElementById("payments").innerHTML =
+  paymentData.payments.map(function(payment) {
+
+    return '<div class="admin">' +
+      '<span>' +
+      '📱 ' + payment.phone +
+      ' | 💰 TSh ' + payment.amount +
+      ' | 🧾 ' + payment.reference +
+      ' | ⏳ ' + payment.status +
+      '</span>' +
+      '</div>';
+
+  }).join("");
   document.getElementById("odds").innerHTML =
     data.odds.map(function(item) {
 
@@ -763,7 +786,15 @@ app.delete("/api/odds/:id", function(req, res) {
 app.post("/api/payment/verify", function(req, res) {
 
   const { phone, amount, reference } = req.body;
+const payment = {
+  id: Date.now(),
+  phone: phone,
+  amount: Number(amount),
+  reference: reference,
+  status: "PENDING"
+};
 
+payments.push(payment);
   if (!phone || !amount || !reference) {
 
     return res.status(400).json({
@@ -797,7 +828,14 @@ app.post("/api/payment/verify", function(req, res) {
 
     reference: reference
 
+  });app.get("/api/payments", function(req, res) {
+
+  res.json({
+    success: true,
+    payments: payments
   });
+
+});
 
 });
 
