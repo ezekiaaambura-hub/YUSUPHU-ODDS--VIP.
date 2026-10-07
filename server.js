@@ -285,8 +285,24 @@ onclick="document.getElementById('pay').scrollIntoView({behavior:'smooth'})">
 </button>
 
 <p>
-<b>Namba ya malipo:</b>
-WEKA NAMBA YA MALIPO HAPA 0793401886
+<div class="box">
+
+<h3>💳 JINSI YA KULIPA</h3>
+
+<p>
+Lipa <b>TSh 5,000</b> kwenda kwenye namba:
+</p>
+
+<h2>📱 0793401886</h2>
+
+<p>
+Baada ya kufanya malipo, utapokea
+<b>Reference/Transaction ID</b> kupitia SMS.
+</p>
+
+<p>
+Kisha bonyeza <b>NIMEFANYA MALIPO</b>
+na uweke Reference hiyo kwenye fomu hapa chini.
 </p>
 
 </div>
