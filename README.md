@@ -23,19 +23,4 @@ Server itatumia PORT ya Render au port 3000.
 - `POST /api/payment/verify`
 
 > Payment halisi haijaunganishwa bado. Endpoint ya payment ni prototype na inahitaji provider/API halali kabla ya kutumika kwa malipo halisi.app.use(express.static("public"));app.get("/", (req, res) => {
-  res.send(`
-    <h1>YUSUPHU ODDS VIP</h1>
-    <p>Karibu kwenye YUSUPHU ODDS VIP</p>
-    <p>Server iko ONLINE ✅</p>
-  `);
-});app.use(cors());
-app.use(express.json());
-app.use(express.static("public"));
 
-app.get("/", (req, res) => {
-  res.send(`
-    <h1>YUSUPHU ODDS VIP</h1>
-    <p>Karibu kwenye YUSUPHU ODDS VIP</p>
-    <p>Server iko ONLINE ✅</p>
-  `);
-});
