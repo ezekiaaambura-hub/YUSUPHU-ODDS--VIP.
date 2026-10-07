@@ -5,7 +5,7 @@ const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-let payments = [];
+
 let odds = [
   {
     id: 1,
@@ -30,10 +30,15 @@ let odds = [
   }
 ];
 
+let payments = [];
+
 const html = `<!doctype html>
 <html lang="sw">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport"
 content="width=device-width,initial-scale=1">
 
@@ -76,7 +81,8 @@ background:none;
 border:0;
 color:#fff;
 padding:8px;
-cursor:pointer
+cursor:pointer;
+font-size:14px
 }
 
 .page{
@@ -90,7 +96,11 @@ padding:30px 5%
 display:block
 }
 
-.hero,.box,.card,.odd,.admin{
+.hero,
+.box,
+.card,
+.odd,
+.admin{
 background:#0d1b2d;
 border:1px solid #20324a;
 border-radius:18px;
@@ -188,7 +198,8 @@ font-weight:bold
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-top:10px
+margin-top:10px;
+gap:15px
 }
 
 .delete{
@@ -196,7 +207,8 @@ background:#351414;
 color:#fecaca;
 border:1px solid #7f1d1d;
 padding:8px;
-border-radius:7px
+border-radius:7px;
+cursor:pointer
 }
 
 .msg{
@@ -206,6 +218,19 @@ padding:10px
 
 .warning{
 color:#f6c453
+}
+
+.payment{
+background:#101f32;
+border:1px solid #29415e;
+border-radius:12px;
+padding:15px;
+margin-top:10px
+}
+
+.pending{
+color:#f6c453;
+font-weight:bold
 }
 
 footer{
@@ -229,9 +254,16 @@ align-items:flex-start;
 flex-direction:column
 }
 
+.admin{
+align-items:flex-start;
+flex-direction:column
 }
 
-</style></head>
+}
+
+</style>
+
+</head>
 
 <body>
 
@@ -284,7 +316,7 @@ onclick="document.getElementById('pay').scrollIntoView({behavior:'smooth'})">
 
 </button>
 
-<p>
+
 <div class="box">
 
 <h3>💳 JINSI YA KULIPA</h3>
@@ -304,6 +336,8 @@ Baada ya kufanya malipo, utapokea
 Kisha bonyeza <b>NIMEFANYA MALIPO</b>
 na uweke Reference hiyo kwenye fomu hapa chini.
 </p>
+
+</div>
 
 </div>
 
@@ -330,7 +364,7 @@ Fanya malipo kwa namba rasmi ya huduma.
 </h3>
 
 <p>
-Ingiza reference ya muamala wako.
+Weka Reference/Transaction ID uliyopewa baada ya malipo.
 </p>
 
 </div>
@@ -343,7 +377,7 @@ Ingiza reference ya muamala wako.
 </h3>
 
 <p>
-Angalia odds zako baada ya malipo.
+Angalia odds zako baada ya kuwasilisha taarifa ya malipo.
 </p>
 
 </div>
@@ -420,16 +454,26 @@ MANAGEMENT
 <h2>
 ⚙️ ADMIN PANEL
 </h2>
+
+
 <div class="box">
 
-<h3>💳 MALIPO YALIYOWASILISHWA</h3>
+<h3>
+💳 MALIPO YALIYOWASILISHWA
+</h3>
 
 <div id="payments">
-Hakuna malipo yaliyowasilishwa bado.
+Inapakia malipo...
 </div>
 
 </div>
+
+
 <div class="box">
+
+<h3>
+➕ ONGEZA VIP ODDS
+</h3>
 
 <form
 class="form"
@@ -468,6 +512,7 @@ ONGEZA
 
 </div>
 
+
 <p class="warning">
 
 ⚠️ Admin login/password tutaongeza
@@ -482,7 +527,10 @@ katika hatua inayofuata.
 
 © 2026 YUSUPHU ODDS VIP
 
-</footer<script>
+</footer>
+
+
+<script>
 
 function show(id) {
 
@@ -508,22 +556,7 @@ async function loadOdds() {
 
   const response = await fetch("/api/odds");
   const data = await response.json();
-const paymentResponse = await fetch("/api/payments");
-const paymentData = await paymentResponse.json();
 
-document.getElementById("payments").innerHTML =
-  paymentData.payments.map(function(payment) {
-
-    return '<div class="admin">' +
-      '<span>' +
-      '📱 ' + payment.phone +
-      ' | 💰 TSh ' + payment.amount +
-      ' | 🧾 ' + payment.reference +
-      ' | ⏳ ' + payment.status +
-      '</span>' +
-      '</div>';
-
-  }).join("");
   document.getElementById("odds").innerHTML =
     data.odds.map(function(item) {
 
@@ -538,6 +571,7 @@ document.getElementById("payments").innerHTML =
         '</article>';
 
     }).join("");
+
 }
 
 
@@ -567,6 +601,49 @@ async function loadAdmin() {
         '</div>';
 
     }).join("");
+
+
+  const paymentResponse =
+    await fetch("/api/payments");
+
+  const paymentData =
+    await paymentResponse.json();
+
+
+  if (!paymentData.payments.length) {
+
+    document.getElementById("payments").innerHTML =
+      "Hakuna malipo yaliyowasilishwa bado.";
+
+    return;
+  }
+
+
+  document.getElementById("payments").innerHTML =
+    paymentData.payments.map(function(payment) {
+
+      return '<div class="payment">' +
+
+        '<div>📱 Simu: ' +
+        payment.phone +
+        '</div>' +
+
+        '<div>💰 Kiasi: TSh ' +
+        payment.amount +
+        '</div>' +
+
+        '<div>🧾 Reference: ' +
+        payment.reference +
+        '</div>' +
+
+        '<div class="pending">⏳ Status: ' +
+        payment.status +
+        '</div>' +
+
+        '</div>';
+
+    }).join("");
+
 }
 
 
@@ -584,11 +661,14 @@ async function add(event) {
 
     body: JSON.stringify({
 
-      match: document.getElementById("match").value,
+      match:
+        document.getElementById("match").value,
 
-      pick: document.getElementById("pick").value,
+      pick:
+        document.getElementById("pick").value,
 
-      odd: document.getElementById("odd").value
+      odd:
+        document.getElementById("odd").value
 
     })
 
@@ -606,6 +686,9 @@ async function add(event) {
   event.target.reset();
 
   loadAdmin();
+
+  alert("✅ Odd imeongezwa.");
+
 }
 
 
@@ -659,6 +742,7 @@ async function pay(event) {
 
   const data = await response.json();
 
+
   if (data.success) {
 
     document.getElementById("msg").innerHTML =
@@ -668,9 +752,8 @@ async function pay(event) {
       data.reference +
       '</div>';
 
-    setTimeout(function() {
-      show("vip");
-    }, 800);
+    document.getElementById("phone").value = "";
+    document.getElementById("ref").value = "";
 
   } else {
 
@@ -688,22 +771,28 @@ loadOdds();
 
 </script>
 
-
 </body>
+
 </html>`;
 
 
 app.get("/", function(req, res) {
+
   res.send(html);
+
 });
 
 
 app.get("/api/health", function(req, res) {
 
   res.json({
+
     success: true,
+
     status: "ok",
+
     app: "YUSUPHU ODDS VIP"
+
   });
 
 });
@@ -712,8 +801,11 @@ app.get("/api/health", function(req, res) {
 app.get("/api/odds", function(req, res) {
 
   res.json({
+
     success: true,
+
     odds: odds
+
   });
 
 });
@@ -723,14 +815,19 @@ app.post("/api/odds", function(req, res) {
 
   const { match, pick, odd } = req.body;
 
+
   if (!match || !pick || !odd) {
 
     return res.status(400).json({
+
       success: false,
+
       message: "Jaza match, pick na odd."
+
     });
 
   }
+
 
   const item = {
 
@@ -746,11 +843,16 @@ app.post("/api/odds", function(req, res) {
 
   };
 
+
   odds.unshift(item);
 
+
   res.status(201).json({
+
     success: true,
+
     odd: item
+
   });
 
 });
@@ -762,22 +864,33 @@ app.delete("/api/odds/:id", function(req, res) {
 
   const before = odds.length;
 
+
   odds = odds.filter(function(item) {
+
     return item.id !== id;
+
   });
+
 
   if (before === odds.length) {
 
     return res.status(404).json({
+
       success: false,
+
       message: "Odd haijapatikana."
+
     });
 
   }
 
+
   res.json({
+
     success: true,
+
     message: "Odd imefutwa."
+
   });
 
 });
@@ -786,34 +899,53 @@ app.delete("/api/odds/:id", function(req, res) {
 app.post("/api/payment/verify", function(req, res) {
 
   const { phone, amount, reference } = req.body;
-const payment = {
-  id: Date.now(),
-  phone: phone,
-  amount: Number(amount),
-  reference: reference,
-  status: "PENDING"
-};
 
-payments.push(payment);
+
   if (!phone || !amount || !reference) {
 
     return res.status(400).json({
+
       success: false,
+
       message:
         "Jaza namba ya simu, kiasi na reference."
+
     });
 
   }
+
 
   if (Number(amount) < 5000) {
 
     return res.status(400).json({
+
       success: false,
+
       message:
         "Kiasi kinachotakiwa ni TSh 5,000."
+
     });
 
   }
+
+
+  const payment = {
+
+    id: Date.now(),
+
+    phone: phone,
+
+    amount: Number(amount),
+
+    reference: reference,
+
+    status: "PENDING"
+
+  };
+
+
+  payments.push(payment);
+
 
   res.json({
 
@@ -828,14 +960,20 @@ payments.push(payment);
 
     reference: reference
 
-  });app.get("/api/payments", function(req, res) {
-
-  res.json({
-    success: true,
-    payments: payments
   });
 
 });
+
+
+app.get("/api/payments", function(req, res) {
+
+  res.json({
+
+    success: true,
+
+    payments: payments
+
+  });
 
 });
 
