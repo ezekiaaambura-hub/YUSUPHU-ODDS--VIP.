@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 10000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve index.html na style.css zilizopo kwenye root
+// Serve files za website
 app.use(express.static(__dirname));
 
 const ADMIN_PASSWORD =
@@ -46,7 +46,13 @@ let odds = [
 ];
 
 let payments = [];
+
 const adminTokens = new Set();
+
+
+// =========================
+// TOKEN
+// =========================
 
 function createToken() {
   return (
@@ -54,6 +60,11 @@ function createToken() {
     Math.random().toString(36).substring(2)
   );
 }
+
+
+// =========================
+// ADMIN AUTH
+// =========================
 
 function requireAdmin(req, res, next) {
   const auth = req.headers.authorization || "";
@@ -77,12 +88,20 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+
+// =========================
 // HOME
+// =========================
+
 app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+
+// =========================
 // HEALTH
+// =========================
+
 app.get("/api/health", function (req, res) {
   res.json({
     success: true,
@@ -90,22 +109,41 @@ app.get("/api/health", function (req, res) {
   });
 });
 
+
+// =========================
 // CONFIG
+// =========================
+
 app.get("/api/config", function (req, res) {
   res.json({
     success: true,
     price: VIP_PRICE,
-    paymentNumber: PAYMENT_NUMBER
+    paymentNumbers: PAYMENT_NUMBERS
   });
 });
 
+
+// =========================
 // GET ODDS
+// =========================
+
 app.get("/api/odds", function (req, res) {
   res.json(odds);
 });
+
+
+// =========================
+// PAYMENT
+// =========================
+
 app.post("/api/payment", function (req, res) {
-  const reference = String(req.body.reference || "").trim();
-  const method = String(req.body.method || "").trim();
+  const reference = String(
+    req.body.reference || ""
+  ).trim();
+
+  const method = String(
+    req.body.method || ""
+  ).trim();
 
   if (!method) {
     return res.status(400).json({
@@ -161,54 +199,18 @@ app.post("/api/payment", function (req, res) {
     payment: payment
   });
 });
-  
 
-  if (!reference) {
-    return res.status(400).json({
-      success: false,
-      message: "Weka Payment Reference."
-    });
-  }
 
-  const alreadyExists = payments.some(function (payment) {
-    return (
-      payment.reference.toLowerCase() ===
-      reference.toLowerCase()
-    );
-  });
-
-  if (alreadyExists) {
-    return res.status(409).json({
-      success: false,
-      message: "Reference hii tayari imetumwa."
-    });
-  }
-
-  const payment = {
-    id: Date.now(),
-    reference: reference,
-    amount: VIP_PRICE,
-    phone: PAYMENT_NUMBER,
-    status: "PENDING",
-    createdAt: new Date().toISOString()
-  };
-
-  payments.unshift(payment);
-
-  res.json({
-    success: true,
-    message:
-      "Malipo yamepokelewa. Subiri Admin athibitishe.",
-    payment: payment
-  });
-});
-
+// =========================
 // PAYMENT STATUS
+// =========================
+
 app.get(
   "/api/payment-status/:reference",
   function (req, res) {
-    const reference =
-      String(req.params.reference || "").trim();
+    const reference = String(
+      req.params.reference || ""
+    ).trim();
 
     const payment = payments.find(function (item) {
       return (
@@ -244,9 +246,15 @@ app.get(
   }
 );
 
+
+// =========================
 // ADMIN LOGIN
+// =========================
+
 app.post("/api/admin/login", function (req, res) {
-  const password = String(req.body.password || "");
+  const password = String(
+    req.body.password || ""
+  );
 
   if (password !== ADMIN_PASSWORD) {
     return res.status(401).json({
@@ -265,7 +273,11 @@ app.post("/api/admin/login", function (req, res) {
   });
 });
 
+
+// =========================
 // ADMIN LOGOUT
+// =========================
+
 app.post(
   "/api/admin/logout",
   requireAdmin,
@@ -281,7 +293,11 @@ app.post(
   }
 );
 
+
+// =========================
 // ADMIN PAYMENTS
+// =========================
+
 app.get(
   "/api/admin/payments",
   requireAdmin,
@@ -290,7 +306,11 @@ app.get(
   }
 );
 
+
+// =========================
 // APPROVE PAYMENT
+// =========================
+
 app.post(
   "/api/admin/payments/:id/approve",
   requireAdmin,
@@ -317,7 +337,11 @@ app.post(
   }
 );
 
+
+// =========================
 // REJECT PAYMENT
+// =========================
+
 app.post(
   "/api/admin/payments/:id/reject",
   requireAdmin,
@@ -344,17 +368,28 @@ app.post(
   }
 );
 
+
+// =========================
 // ADD ODDS
+// =========================
+
 app.post(
   "/api/admin/odds",
   requireAdmin,
   function (req, res) {
-    const match = String(req.body.match || "").trim();
-    const pick = String(req.body.pick || "").trim();
+    const match = String(
+      req.body.match || ""
+    ).trim();
+
+    const pick = String(
+      req.body.pick || ""
+    ).trim();
+
     const odd = Number(req.body.odd);
 
-    const type =
-      String(req.body.type || "VIP").toUpperCase();
+    const type = String(
+      req.body.type || "VIP"
+    ).toUpperCase();
 
     if (
       !match ||
@@ -386,7 +421,11 @@ app.post(
   }
 );
 
+
+// =========================
 // DELETE ODDS
+// =========================
+
 app.delete(
   "/api/admin/odds/:id",
   requireAdmin,
@@ -412,9 +451,18 @@ app.delete(
   }
 );
 
+
+// =========================
 // START SERVER
-app.listen(PORT, "0.0.0.0", function () {
-  console.log(
-    "YUSUPHU ODDS VIP running on port " + PORT
-  );
-});
+// =========================
+
+app.listen(
+  PORT,
+  "0.0.0.0",
+  function () {
+    console.log(
+      "YUSUPHU ODDS VIP running on port " +
+      PORT
+    );
+  }
+);
