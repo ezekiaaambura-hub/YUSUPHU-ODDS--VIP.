@@ -6,99 +6,542 @@
 
   <title>YUSUPHU ODDS VIP</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="hero">
+
+    <div class="hero-title">
+      <span class="football">⚽</span>
+      <span>YUSUPHU ODDS VIP</span>
+    </div>
+
+    <p>
+      Free Odds • VIP TSh 5,000 • Bet Slip Calculator
+    </p>
+
+  </header>
+
+
+  <!-- NAVIGATION -->
+  <nav class="navigation">
+
+    <button onclick="showPage('home')">
+      🏠 HOME
+    </button>
+
+    <button onclick="showPage('free')">
+      🆓 FREE ODDS
+    </button>
+
+    <button onclick="showPage('vip')">
+      ⭐ VIP ODDS
+    </button>
+
+    <button onclick="showPage('mkeka')">
+      🎟️ MKEKA
+    </button>
+
+    <button onclick="showPage('payment')">
+      💳 LIPA 5,000
+    </button>
+
+    <button onclick="showPage('admin')">
+      👤 ADMIN
+    </button>
+
+  </nav>
+
+
+  <main>
+
+
+    <!-- HOME -->
+    <section id="home" class="page active">
+
+      <div class="card vip-card">
+
+        <div class="green-title">
+          VIP FOOTBALL PREDICTIONS
+        </div>
+
+        <h1>
+          Karibu<br>
+          YUSUPHU ODDS VIP
+        </h1>
+
+        <p>
+          Jiunge na huduma ya VIP Odds kwa
+          <strong>TSh 5,000.</strong>
+        </p>
+
+        <button class="green-button"
+                onclick="showPage('payment')">
+          💳 LIPA TSh 5,000
+        </button>
+
+      </div>
+
+
+      <div class="card">
+
+        <h2>💳 JINSI YA KULIPA</h2>
+
+        <p>
+          Lipa TSh 5,000 kwenda kwenye namba:
+        </p>
+
+        <div class="phone-number">
+          📱 0793401886
+        </div>
+
+        <p>
+          Baada ya kufanya malipo, utapokea
+          <strong>Reference/Transaction ID</strong>
+          kupitia SMS.
+        </p>
+
+        <button class="green-button"
+                onclick="showPage('payment')">
+          💳 NIMEFANYA MALIPO
+        </button>
+
+      </div>
+
+
+      <div class="card">
+
+        <h2>🎁 ODDS ZA KWANZA BURE</h2>
+
+        <p>
+          Kabla hujalipia VIP, unaweza kuona
+          odds za kwanza bure.
+        </p>
+
+        <button class="blue-button"
+                onclick="showPage('free')">
+          ANGALIA FREE ODDS
+        </button>
+
+      </div>
+
+
+      <div class="warning">
+
+        <span class="warning-icon">🔞</span>
+
+        <span>
+          <strong>18+</strong> • Usibeti zaidi ya uwezo wako.
+          Mfumo huu hautoi bet moja kwa moja kwa kampuni za betting.
+        </span>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- FREE ODDS -->
+    <section id="free" class="page">
+
+      <div class="section-title">
+        🆓 FREE ODDS
+      </div>
+
+      <div id="freeOddsList">
+
+        <div class="card">
+          <h2>Free Odds</h2>
+          <p>
+            Odds za bure zitaonekana hapa.
+          </p>
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- VIP ODDS -->
+    <section id="vip" class="page">
+
+      <div class="section-title">
+        ⭐ VIP ODDS
+      </div>
+
+      <div class="card">
+
+        <h2>🔐 VIP ODDS</h2>
+
+        <p>
+          VIP Odds zinapatikana baada ya
+          kuthibitisha malipo ya TSh 5,000.
+        </p>
+
+        <button class="green-button"
+                onclick="showPage('payment')">
+          💳 LIPA TSh 5,000
+        </button>
+
+      </div>
+
+      <div id="vipOddsList"></div>
+
+    </section>
+
+
+
+    <!-- MKEKA -->
+    <section id="mkeka" class="page">
+
+      <div class="section-title">
+        🎟️ MKEKA
+      </div>
+
+      <div class="card">
+
+        <h2>🎟️ BET SLIP</h2>
+
+        <p>
+          Chagua odds zako na tengeneza mkeka wako.
+        </p>
+
+        <div class="bet-slip">
+
+          <div class="bet-row">
+            Arsenal vs Chelsea
+            <strong>1.85</strong>
+          </div>
+
+          <div class="bet-row">
+            Barcelona vs Sevilla
+            <strong>1.60</strong>
+          </div>
+
+          <div class="bet-row">
+            Real Madrid vs Valencia
+            <strong>1.75</strong>
+          </div>
+
+        </div>
+
+        <div class="total-odds">
+          Total Odds:
+          <strong>5.18</strong>
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- PAYMENT -->
+    <section id="payment" class="page">
+
+      <div class="section-title">
+        💳 LIPA TSh 5,000
+      </div>
+
+      <div class="card">
+
+        <h2>💳 JINSI YA KULIPA</h2>
+
+        <p>
+          Lipa kiasi cha:
+        </p>
+
+        <div class="amount">
+          TSh 5,000
+        </div>
+
+        <p>
+          Tuma malipo kwenda:
+        </p>
+
+        <div class="phone-number">
+          📱 0793401886
+        </div>
+
+        <hr>
+
+        <h3>
+          🧾 Payment Reference
+        </h3>
+
+        <p>
+          Baada ya kulipa, angalia SMS yako
+          na tafuta <strong>Reference/Transaction ID</strong>.
+        </p>
+
+        <input
+          type="text"
+          id="paymentReference"
+          placeholder="Weka Payment Reference">
+
+        <button class="green-button"
+                onclick="submitPayment()">
+          ✅ NIMEFANYA MALIPO
+        </button>
+
+        <div id="paymentMessage"></div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ADMIN -->
+    <section id="admin" class="page">
+
+      <div class="section-title">
+        👤 ADMIN
+      </div>
+
+      <div class="card">
+
+        <h2>🔐 Admin Panel</h2>
+
+        <p>
+          Sehemu hii ni kwa ajili ya kusimamia
+          Free Odds, VIP Odds na malipo.
+        </p>
+
+        <input
+          type="password"
+          id="adminPassword"
+          placeholder="Admin Password">
+
+        <button class="blue-button"
+                onclick="adminLogin()">
+          🔐 INGIA ADMIN
+        </button>
+
+        <div id="adminMessage"></div>
+
+      </div>
+
+    </section>
+
+
+  </main>
+
+
+  <!-- FOOTER -->
+  <footer>
+
+    <strong>YUSUPHU ODDS VIP</strong>
+
+    <p>
+      © 2026 • Football Predictions
+    </p>
+
+    <p>
+      🔞 18+ Bet Responsibly
+    </p>
+
+  </footer>
+
+
+
+<script>
+
+  // KUONESHA PAGE
+  function showPage(page) {
+
+    document.querySelectorAll(".page").forEach(function(section) {
+
+      section.classList.remove("active");
+
+    });
+
+    const selected = document.getElementById(page);
+
+    if (selected) {
+
+      selected.classList.add("active");
+
     }
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+    if (page === "free") {
+      loadOdds();
     }
 
-    header {
-      background: #111827;
-      color: white;
-      text-align: center;
-      padding: 25px 15px;
+    if (page === "vip") {
+      loadOdds();
     }
 
-    header h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
+  }
+
+
+
+  // KUPATA ODDS KUTOKA SERVER
+  async function loadOdds() {
+
+    try {
+
+      const response = await fetch("/api/odds");
+
+      if (!response.ok) {
+        throw new Error("Server error");
+      }
+
+      const odds = await response.json();
+
+      const freeList =
+        document.getElementById("freeOddsList");
+
+      const vipList =
+        document.getElementById("vipOddsList");
+
+
+      if (!odds || odds.length === 0) {
+
+        freeList.innerHTML = `
+          <div class="card">
+            <h2>Hakuna odds kwa sasa</h2>
+            <p>Admin hajaongeza odds bado.</p>
+          </div>
+        `;
+
+        vipList.innerHTML = "";
+
+        return;
+
+      }
+
+
+      let html = "";
+
+      odds.forEach(function(item) {
+
+        html += `
+
+          <div class="odd-card">
+
+            <div>
+              <strong>${escapeHtml(item.match)}</strong>
+            </div>
+
+            <div class="pick">
+              ${escapeHtml(item.pick)}
+            </div>
+
+            <div class="odd-number">
+              ${Number(item.odd).toFixed(2)}
+            </div>
+
+          </div>
+
+        `;
+
+      });
+
+
+      freeList.innerHTML = html;
+
+      vipList.innerHTML = html;
+
     }
 
-    header p {
-      margin: 0;
-      font-size: 17px;
+    catch (error) {
+
+      console.log(error);
+
     }
 
-    .container {
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
+  }
+
+
+
+  // PAYMENT
+  async function submitPayment() {
+
+    const reference =
+      document.getElementById("paymentReference").value.trim();
+
+    const message =
+      document.getElementById("paymentMessage");
+
+
+    if (!reference) {
+
+      message.innerHTML =
+        "<p class='error'>Tafadhali weka Payment Reference.</p>";
+
+      return;
+
     }
 
-    .card {
-      background: white;
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+
+    message.innerHTML =
+      "<p class='success'>Payment Reference imepokelewa.</p>";
+
+  }
+
+
+
+  // ADMIN
+  function adminLogin() {
+
+    const password =
+      document.getElementById("adminPassword").value;
+
+    const message =
+      document.getElementById("adminMessage");
+
+
+    if (!password) {
+
+      message.innerHTML =
+        "<p class='error'>Weka Admin Password.</p>";
+
+      return;
+
     }
 
-    h2 {
-      margin-top: 0;
-    }
 
-    .free {
-      border-left: 5px solid #16a34a;
-    }
+    message.innerHTML =
+      "<p class='success'>Taarifa imetumwa kwa Admin.</p>";
 
-    .vip {
-      border-left: 5px solid #dc2626;
-    }
+  }
 
-    .payment {
-      border-left: 5px solid #2563eb;
-    }
 
-    .admin {
-      border-left: 5px solid #7c3aed;
-    }
 
-    .odd {
-      background: #f9fafb;
-      padding: 14px;
-      margin: 10px 0;
-      border-radius: 10px;
-      border: 1px solid #e5e7eb;
-    }
+  // SECURITY YA TEXT
+  function escapeHtml(value) {
 
-    .odd strong {
-      display: block;
-      margin-bottom: 5px;
-    }
+    return String(value).replace(/[&<>"']/g, function(character) {
 
-    input,
-    select,
-    button {
-      width: 100%;
-      padding: 13px;
-      margin-top: 10px;
-      border-radius: 8px;
-      font-size: 16px;
-    }
+      return {
 
-    input,
-    select {
-      border: 1px solid #d1d5db;
-      background: white;
-    }
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
 
-    button {
-      border: none;
-      background: #111827;
-      color:
+      }[character];
+
+    });
+
+  }
+
+
+  // ANZA HOME
+  showPage("home");
+
+</script>
+
+</body>
+  </html>
