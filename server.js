@@ -11,7 +11,7 @@ const PAYMENT_AMOUNT = 5000;
 
 // Weka password yako ya Admin hapa"Yusuphu2026"
 const ADMIN_PASSWORD = "WEKA_PASSWORD_YAKO_HAPA";
-
+,Maritaezekia,1
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
