@@ -223,14 +223,35 @@ LIPA TSh 5,000
 <p>Weka malipo ya:</p>
 
 <h1>TSh 5,000</h1>
+<p><strong>Chagua njia ya malipo:</strong></p>
+
+<label>
+  <input type="radio" name="paymentMethod" value="mpesa" checked>
+  📱 M-Pesa — 0793401886
+</label>
+
+<br><br>
+
+<label>
+  <input type="radio" name="paymentMethod" value="airtel">
+  📱 Airtel Money — 0692359311
+</label>
+
+<br><br>
+
+<label>
+  <input type="radio" name="paymentMethod" value="halopesa">
+  📱 HaloPesa — 0613431930
+</label>
+
+<p>Lipa TSh 5,000 kwa njia uliyochagua, kisha bonyeza <strong>NIMEFANYA MALIPO</strong> na weka Payment Reference yako.</p>
 
 
 
-<p>Namba za malipo:</p>
 
-<h3>📱 M-Pesa: 0793401886</h3>
-<h3>📱 Airtel Money: 0692359311</h3>
-<h3>📱 HaloPesa: 0613431930</h3>
+
+
+
 
 <p>Lipa TSh 5,000, kisha bonyeza <strong>NIMEFANYA MALIPO</strong> na weka Payment Reference yako.</p>
 
