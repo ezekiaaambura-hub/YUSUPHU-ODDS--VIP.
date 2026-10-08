@@ -3,84 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>YUSUPHU ODDS VIP</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #111;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    header {
+      background: #111827;
       color: white;
       text-align: center;
+      padding: 25px 15px;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 17px;
     }
 
     .container {
-      max-width: 500px;
+      max-width: 900px;
       margin: auto;
-      padding: 40px 20px;
-    }
-
-    h1 {
-      font-size: 32px;
-      margin-bottom: 10px;
+      padding: 20px;
     }
 
     .card {
-      background: #222;
-      padding: 25px;
-      border-radius: 15px;
-      margin-top: 25px;
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .free {
+      border-left: 5px solid #16a34a;
+    }
+
+    .vip {
+      border-left: 5px solid #dc2626;
+    }
+
+    .payment {
+      border-left: 5px solid #2563eb;
+    }
+
+    .admin {
+      border-left: 5px solid #7c3aed;
+    }
+
+    .odd {
+      background: #f9fafb;
+      padding: 14px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .odd strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 10px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    input,
+    select {
+      border: 1px solid #d1d5db;
+      background: white;
     }
 
     button {
-      padding: 14px 25px;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="container">
-
-    <h1>YUSUPHU ODDS VIP</h1>
-
-<p>KARIBU YUSUPHU ODDS VIP 🎉</p>
-
-    
-
-    <div class="card">
-      <h2>VIP ODDS</h2>
-
-      <p>Jiunge kupata odds za VIP.</p>
-
-      <button onclick="checkSystem()">
-        Angalia Mfumo
-      </button>
-
-      <p id="result"></p>
-    </div>
-
-  </div>
-
-  <script>
-    async function checkSystem() {
-      const result = document.getElementById("result");
-
-      try {
-        const response = await fetch("/api/health");
-        const data = await response.json();
-
-        result.innerText = data.message;
-      } catch (error) {
-        result.innerText = "Server haijapatikana.";
-      }
-    }
-  </script>
-
-</body>
-</html>
+      background: #111827;
+      color:
