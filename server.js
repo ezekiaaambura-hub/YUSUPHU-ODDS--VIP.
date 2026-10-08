@@ -13,7 +13,12 @@ app.use(express.static(__dirname));
 const ADMIN_PASSWORD =
   process.env.ADMIN_PASSWORD || "BADILISHA_PASSWORD_HAPA";
 
-const PAYMENT_NUMBER = "0793401886";
+const PAYMENT_NUMBERS = {
+  "M-Pesa": "0793401886",
+  "Airtel Money": "0692359311",
+  "HaloPesa": "0613431930"
+};
+
 const VIP_PRICE = 5000;
 
 let odds = [
@@ -98,10 +103,65 @@ app.get("/api/config", function (req, res) {
 app.get("/api/odds", function (req, res) {
   res.json(odds);
 });
-
-// PAYMENT
 app.post("/api/payment", function (req, res) {
   const reference = String(req.body.reference || "").trim();
+  const method = String(req.body.method || "").trim();
+
+  if (!method) {
+    return res.status(400).json({
+      success: false,
+      message: "Chagua mtandao wa malipo."
+    });
+  }
+
+  if (!PAYMENT_NUMBERS[method]) {
+    return res.status(400).json({
+      success: false,
+      message: "Mtandao wa malipo sio sahihi."
+    });
+  }
+
+  if (!reference) {
+    return res.status(400).json({
+      success: false,
+      message: "Weka Payment Reference."
+    });
+  }
+
+  const alreadyExists = payments.some(function (payment) {
+    return (
+      payment.reference.toLowerCase() ===
+      reference.toLowerCase()
+    );
+  });
+
+  if (alreadyExists) {
+    return res.status(409).json({
+      success: false,
+      message: "Reference hii tayari imetumwa."
+    });
+  }
+
+  const payment = {
+    id: Date.now(),
+    reference: reference,
+    method: method,
+    amount: VIP_PRICE,
+    phone: PAYMENT_NUMBERS[method],
+    status: "PENDING",
+    createdAt: new Date().toISOString()
+  };
+
+  payments.unshift(payment);
+
+  res.json({
+    success: true,
+    message:
+      "Malipo yamepokelewa. Subiri Admin athibitishe.",
+    payment: payment
+  });
+});
+  
 
   if (!reference) {
     return res.status(400).json({
