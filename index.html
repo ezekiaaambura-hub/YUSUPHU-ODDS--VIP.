@@ -1,1897 +1,1786 @@
+const express = require("express");
+
+const app = express();
+const PORT = process.env.PORT || 10000;
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// =====================================================
+// SETTINGS
+// =====================================================
+
+const ADMIN_PASSWORD =
+  process.env.ADMIN_PASSWORD || "BADILISHA_PASSWORD_HAPA";
+
+const VIP_PRICE = 5000;
+
+const PAYMENT_NUMBERS = {
+  "M-Pesa": "0793401886",
+  "Airtel Money": "WEKA_NAMBA_AIRTEL",
+  "HaloPesa": "WEKA_NAMBA_HALOPESA"
+};
+
+// =====================================================
+// DATA
+// =====================================================
+
+let odds = [
+  {
+    id: 1,
+    match: "Arsenal vs Chelsea",
+    pick: "Over 2.5",
+    odd: 1.85,
+    type: "VIP"
+  },
+  {
+    id: 2,
+    match: "Barcelona vs Sevilla",
+    pick: "Barcelona Win",
+    odd: 1.60,
+    type: "VIP"
+  },
+  {
+    id: 3,
+    match: "Real Madrid vs Valencia",
+    pick: "Both Teams To Score",
+    odd: 1.75,
+    type: "FREE"
+  }
+];
+
+let payments = [];
+
+const adminTokens = new Set();
+
+function createToken() {
+  return (
+    Date.now().toString(36) +
+    Math.random().toString(36).substring(2) +
+    Math.random().toString(36).substring(2)
+  );
+}
+
+function requireAdmin(req, res, next) {
+  const auth = req.headers.authorization || "";
+
+  if (!auth.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      message: "Admin login inahitajika."
+    });
+  }
+
+  const token = auth.substring(7);
+
+  if (!adminTokens.has(token)) {
+    return res.status(401).json({
+      success: false,
+      message: "Admin session imeisha."
+    });
+  }
+
+  next();
+}
+
+// =====================================================
+// HEALTH
+// =====================================================
+
+app.get("/api/health", function (req, res) {
+  res.json({
+    success: true,
+    app: "YUSUPHU ODDS VIP"
+  });
+});
+
+// =====================================================
+// CONFIG
+// =====================================================
+
+app.get("/api/config", function (req, res) {
+  res.json({
+    success: true,
+    price: VIP_PRICE,
+    paymentNumbers: PAYMENT_NUMBERS
+  });
+});
+
+// =====================================================
+// ODDS
+// =====================================================
+
+app.get("/api/odds", function (req, res) {
+  res.json(odds);
+});
+
+// =====================================================
+// PAYMENT
+// =====================================================
+
+app.post("/api/payment", function (req, res) {
+  const reference = String(
+    req.body.reference || ""
+  ).trim();
+
+  const method = String(
+    req.body.method || "M-Pesa"
+  ).trim();
+
+  if (!reference) {
+    return res.status(400).json({
+      success: false,
+      message: "Weka Payment Reference."
+    });
+  }
+
+  if (!PAYMENT_NUMBERS[method]) {
+    return res.status(400).json({
+      success: false,
+      message: "Chagua njia sahihi ya malipo."
+    });
+  }
+
+  if (
+    PAYMENT_NUMBERS[method].startsWith("WEKA_")
+  ) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Namba ya " +
+        method +
+        " bado haijawekwa."
+    });
+  }
+
+  const exists = payments.some(
+    function (payment) {
+      return (
+        payment.reference.toLowerCase() ===
+        reference.toLowerCase()
+      );
+    }
+  );
+
+  if (exists) {
+    return res.status(409).json({
+      success: false,
+      message:
+        "Reference hii tayari imetumwa."
+    });
+  }
+
+  const payment = {
+    id: Date.now(),
+    reference: reference,
+    method: method,
+    amount: VIP_PRICE,
+    phone: PAYMENT_NUMBERS[method],
+    status: "PENDING",
+    createdAt: new Date().toISOString()
+  };
+
+  payments.unshift(payment);
+
+  res.json({
+    success: true,
+    message:
+      "Malipo yamepokelewa. Subiri Admin athibitishe.",
+    payment: payment
+  });
+});
+
+// =====================================================
+// PAYMENT STATUS
+// =====================================================
+
+app.get(
+  "/api/payment-status/:reference",
+  function (req, res) {
+    const reference =
+      String(req.params.reference || "").trim();
+
+    const payment = payments.find(
+      function (item) {
+        return (
+          item.reference.toLowerCase() ===
+          reference.toLowerCase()
+        );
+      }
+    );
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Payment Reference haijapatikana."
+      });
+    }
+
+    let message =
+      "Malipo bado yanasubiri uthibitisho wa Admin.";
+
+    if (payment.status === "APPROVED") {
+      message =
+        "Malipo yamethibitishwa. VIP imefunguliwa.";
+    }
+
+    if (payment.status === "REJECTED") {
+      message =
+        "Malipo yamekataliwa.";
+    }
+
+    res.json({
+      success: true,
+      status: payment.status,
+      message: message
+    });
+  }
+);
+
+// =====================================================
+// ADMIN LOGIN
+// =====================================================
+
+app.post(
+  "/api/admin/login",
+  function (req, res) {
+    const password =
+      String(req.body.password || "");
+
+    if (password !== ADMIN_PASSWORD) {
+      return res.status(401).json({
+        success: false,
+        message: "Password sio sahihi."
+      });
+    }
+
+    const token = createToken();
+
+    adminTokens.add(token);
+
+    res.json({
+      success: true,
+      token: token
+    });
+  }
+);
+
+// =====================================================
+// ADMIN LOGOUT
+// =====================================================
+
+app.post(
+  "/api/admin/logout",
+  requireAdmin,
+  function (req, res) {
+    const token =
+      req.headers.authorization.substring(7);
+
+    adminTokens.delete(token);
+
+    res.json({
+      success: true
+    });
+  }
+);
+
+// =====================================================
+// ADMIN PAYMENTS
+// =====================================================
+
+app.get(
+  "/api/admin/payments",
+  requireAdmin,
+  function (req, res) {
+    res.json(payments);
+  }
+);
+
+// =====================================================
+// APPROVE PAYMENT
+// =====================================================
+
+app.post(
+  "/api/admin/payments/:id/approve",
+  requireAdmin,
+  function (req, res) {
+    const id = Number(req.params.id);
+
+    const payment = payments.find(
+      function (item) {
+        return item.id === id;
+      }
+    );
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Malipo hayajapatikana."
+      });
+    }
+
+    payment.status = "APPROVED";
+
+    res.json({
+      success: true,
+      payment: payment
+    });
+  }
+);
+
+// =====================================================
+// REJECT PAYMENT
+// =====================================================
+
+app.post(
+  "/api/admin/payments/:id/reject",
+  requireAdmin,
+  function (req, res) {
+    const id = Number(req.params.id);
+
+    const payment = payments.find(
+      function (item) {
+        return item.id === id;
+      }
+    );
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Malipo hayajapatikana."
+      });
+    }
+
+    payment.status = "REJECTED";
+
+    res.json({
+      success: true,
+      payment: payment
+    });
+  }
+);
+
+// =====================================================
+// ADD ODDS
+// =====================================================
+
+app.post(
+  "/api/admin/odds",
+  requireAdmin,
+  function (req, res) {
+    const match =
+      String(req.body.match || "").trim();
+
+    const pick =
+      String(req.body.pick || "").trim();
+
+    const odd =
+      Number(req.body.odd);
+
+    const type =
+      String(
+        req.body.type || "VIP"
+      ).toUpperCase();
+
+    if (
+      !match ||
+      !pick ||
+      !Number.isFinite(odd) ||
+      odd <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Jaza Match, Pick na Odd kwa usahihi."
+      });
+    }
+
+    const newOdd = {
+      id: Date.now(),
+      match: match,
+      pick: pick,
+      odd: odd,
+      type:
+        type === "FREE"
+          ? "FREE"
+          : "VIP"
+    };
+
+    odds.unshift(newOdd);
+
+    res.status(201).json({
+      success: true,
+      item: newOdd
+    });
+  }
+);
+
+// =====================================================
+// DELETE ODDS
+// =====================================================
+
+app.delete(
+  "/api/admin/odds/:id",
+  requireAdmin,
+  function (req, res) {
+    const id =
+      Number(req.params.id);
+
+    const oldLength =
+      odds.length;
+
+    odds = odds.filter(
+      function (item) {
+        return item.id !== id;
+      }
+    );
+
+    if (odds.length === oldLength) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Odd haijapatikana."
+      });
+    }
+
+    res.json({
+      success: true
+    });
+  }
+);
+
+// =====================================================
+// WEBSITE
+// =====================================================
+
+const html = `
 <!DOCTYPE html>
+
 <html lang="sw">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>YUSUPHU ODDS VIP</title>
+<meta charset="UTF-8">
 
-  <link rel="stylesheet" href="style.css">
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<title>YUSUPHU ODDS VIP</title>
 
-    body {
-      font-family: Arial, sans-serif;
-      background: #07111f;
-      color: #fff;
-      min-height: 100vh;
-    }
+<style>
 
-    header {
-      background: #0b1d33;
-      border-bottom: 1px solid #183858;
-      padding: 15px;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    .top {
-      max-width: 1100px;
-      margin: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-    }
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #061426;
+  color: white;
+}
 
-    .logo {
-      font-size: 21px;
-      font-weight: bold;
-      color: #19a7ff;
-    }
+button,
+input,
+select {
+  font: inherit;
+}
 
-    .logo span {
-      color: #fff;
-    }
+.hero {
+  background:
+    linear-gradient(
+      135deg,
+      #087cff,
+      #1164e8
+    );
 
-    nav {
-      display: flex;
-      gap: 7px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
+  text-align: center;
 
-    nav button {
-      border: none;
-      background: #102d4b;
-      color: white;
-      padding: 10px 13px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+  padding: 30px 15px;
+}
 
-    nav button:hover {
-      background: #19a7ff;
-    }
+.hero-title {
+  display: flex;
 
-    main {
-      max-width: 1100px;
-      margin: auto;
-      padding: 20px 15px 50px;
-    }
+  justify-content: center;
 
-    .view {
-      display: none;
-    }
+  align-items: center;
 
-    .view.active {
-      display: block;
-    }
+  gap: 12px;
 
-    .hero {
-      background: linear-gradient(135deg, #0c2947, #073b63);
-      border-radius: 15px;
-      padding: 35px 20px;
-      text-align: center;
-      margin-bottom: 20px;
-      border: 1px solid #18547e;
-    }
+  font-size: 40px;
 
-    .hero h1 {
-      font-size: 34px;
-      margin-bottom: 12px;
-      color: #20b5ff;
-    }
+  font-weight: 900;
+}
 
-    .hero p {
-      color: #d6e9f8;
-      margin-bottom: 20px;
-      line-height: 1.6;
-    }
+.hero p {
+  font-size: 20px;
+  font-weight: bold;
+}
 
-    .btn {
-      border: none;
-      border-radius: 8px;
-      padding: 13px 20px;
-      cursor: pointer;
-      font-weight: bold;
-      color: white;
-      background: #0d91dc;
-      margin: 4px;
-    }
+.navigation {
+  background: #0b1728;
 
-    .btn:hover {
-      opacity: .85;
-    }
+  padding: 20px;
 
-    .btn.green {
-      background: #159447;
-    }
+  display: grid;
 
-    .btn.red {
-      background: #c93434;
-    }
+  grid-template-columns:
+    repeat(3, 1fr);
 
-    .btn.dark {
-      background: #263b50;
-    }
+  gap: 12px;
+}
 
-    .card {
-      background: #0c1d30;
-      border: 1px solid #183b5a;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 18px;
-    }
+.navigation button {
+  border: none;
 
-    .card h2 {
-      margin-bottom: 15px;
-      color: #20b5ff;
-    }
+  border-radius: 15px;
 
-    .payment-number {
-      font-size: 28px;
-      font-weight: bold;
-      color: #32d879;
-      text-align: center;
-      margin: 15px 0;
-    }
+  padding: 17px 8px;
 
-    .price {
-      font-size: 30px;
-      text-align: center;
-      font-weight: bold;
-      color: #ffd54a;
-      margin: 15px 0;
-    }
+  font-weight: 900;
 
-    input,
-    select {
-      width: 100%;
-      padding: 13px;
-      border-radius: 7px;
-      border: 1px solid #31516d;
-      background: #071523;
-      color: white;
-      margin: 7px 0;
-      outline: none;
-    }
+  background: #f5f6f8;
 
-    input:focus,
-    select:focus {
-      border-color: #1aaeff;
-    }
+  color: #101b2b;
 
-    label {
-      display: block;
-      margin-top: 10px;
-      color: #b9d0e3;
-      font-weight: bold;
-    }
+  cursor: pointer;
+}
 
-    .message {
-      padding: 12px;
-      border-radius: 7px;
-      margin-top: 12px;
-      background: #102d46;
-      color: #d9efff;
-    }
+main {
+  max-width: 1000px;
 
-    .odd {
-      background: #10253b;
-      border: 1px solid #1b4567;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-    }
+  margin: auto;
 
-    .odd h3 {
-      font-size: 17px;
-      margin-bottom: 6px;
-    }
+  padding: 20px;
+}
 
-    .odd p {
-      color: #a9c4d9;
-      font-size: 14px;
-    }
+.page {
+  display: none;
+}
 
-    .odd-value {
-      background: #0d91dc;
-      padding: 10px 13px;
-      border-radius: 7px;
-      font-weight: bold;
-      white-space: nowrap;
-    }
+.page.active {
+  display: block;
+}
 
-    .odd-actions {
-      margin-top: 10px;
-    }
+.card {
+  background:
+    linear-gradient(
+      145deg,
+      #123554,
+      #082443
+    );
 
-    .admin-item,
-    .payment-item {
-      background: #10253b;
-      border: 1px solid #1b4567;
-      border-radius: 9px;
-      padding: 14px;
-      margin-bottom: 10px;
-    }
+  border: 1px solid #15558c;
 
-    .admin-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
+  border-radius: 22px;
 
-    .status {
-      display: inline-block;
-      padding: 5px 9px;
-      border-radius: 5px;
-      font-size: 12px;
-      font-weight: bold;
-      margin-top: 7px;
-    }
+  padding: 30px;
 
-    .pending {
-      background: #795b09;
-      color: #ffe89a;
-    }
+  margin-bottom: 18px;
 
-    .approved {
-      background: #126633;
-      color: #9dffc0;
-    }
+  box-shadow:
+    0 8px 25px #0005;
+}
 
-    .rejected {
-      background: #702121;
-      color: #ffadad;
-    }
+.green-title {
+  color: #19e68b;
 
-    .hidden {
-      display: none !important;
-    }
+  font-size: 24px;
 
-    .empty {
-      text-align: center;
-      padding: 25px;
-      color: #9cb5c9;
-    }
+  font-weight: 900;
+}
 
-    .slip-item {
-      background: #10253b;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-    }
+h1 {
+  font-size: 60px;
 
-    .total {
-      background: #0d2943;
-      border: 1px solid #21618c;
-      border-radius: 10px;
-      padding: 18px;
-      text-align: center;
-      margin-top: 15px;
-    }
+  line-height: 1;
 
-    .total strong {
-      font-size: 28px;
-      color: #ffd54a;
-    }
+  margin: 20px 0;
+}
 
-    footer {
-      text-align: center;
-      color: #7895aa;
-      padding: 25px 10px;
-      border-top: 1px solid #183858;
-      margin-top: 30px;
-    }
+h2 {
+  font-size: 30px;
+}
 
-    .two {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
+.card p {
+  color: #d7e5f4;
 
-    @media (max-width: 700px) {
-      .top {
-        flex-direction: column;
-      }
+  font-size: 20px;
 
-      nav {
-        width: 100%;
-      }
+  line-height: 1.4;
+}
 
-      nav button {
-        flex: 1;
-        min-width: 90px;
-        font-size: 12px;
-      }
+.green-button,
+.blue-button {
+  border: none;
 
-      .hero h1 {
-        font-size: 27px;
-      }
+  border-radius: 14px;
 
-      .two {
-        grid-template-columns: 1fr;
-      }
+  padding: 17px 25px;
 
-      .odd {
-        align-items: flex-start;
-      }
+  font-weight: 900;
 
-      .odd-value {
-        font-size: 14px;
-      }
+  cursor: pointer;
 
-      .payment-number {
-        font-size: 23px;
-      }
-    }
-  </style>
+  margin-top: 10px;
+}
+
+.green-button {
+  background: #19df83;
+
+  color: #03170d;
+}
+
+.blue-button {
+  background: #087cff;
+
+  color: white;
+}
+
+.phone-number {
+  font-size: 42px;
+
+  font-weight: 900;
+
+  margin: 20px 0;
+}
+
+.amount {
+  color: #19e68b;
+
+  font-size: 48px;
+
+  font-weight: 900;
+}
+
+input,
+select {
+  width: 100%;
+
+  padding: 16px;
+
+  margin: 8px 0 12px;
+
+  border-radius: 12px;
+
+  border: 1px solid #58728d;
+
+  background: #06182b;
+
+  color: white;
+}
+
+.odd-card {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items: center;
+
+  gap: 15px;
+
+  background: #102d4b;
+
+  border-radius: 17px;
+
+  padding: 20px;
+
+  margin: 12px 0;
+}
+
+.odd-number {
+  color: #19e68b;
+
+  font-size: 30px;
+
+  font-weight: 900;
+}
+
+.warning {
+  background: #102d4b;
+
+  border-radius: 18px;
+
+  padding: 20px;
+
+  margin-top: 15px;
+
+  line-height: 1.5;
+}
+
+.success {
+  background: #087044;
+
+  padding: 14px;
+
+  border-radius: 10px;
+
+  margin-top: 12px;
+}
+
+.error {
+  background: #812536;
+
+  padding: 14px;
+
+  border-radius: 10px;
+
+  margin-top: 12px;
+}
+
+.admin-item {
+  background: #102d4b;
+
+  padding: 16px;
+
+  border-radius: 12px;
+
+  margin: 10px 0;
+}
+
+.admin-actions {
+  display: flex;
+
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+.small-button {
+  border: none;
+
+  border-radius: 8px;
+
+  padding: 10px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+.approve {
+  background: #19df83;
+}
+
+.reject,
+.delete {
+  background: #ef4f61;
+
+  color: white;
+}
+
+.payment-method {
+  border: 1px solid #15558c;
+
+  border-radius: 14px;
+
+  padding: 15px;
+
+  margin: 12px 0;
+}
+
+.method-number {
+  font-size: 25px;
+
+  font-weight: 900;
+
+  color: #19e68b;
+}
+
+footer {
+  background: #030b15;
+
+  text-align: center;
+
+  padding: 30px;
+
+  color: #a8bbcf;
+}
+
+hr {
+  border: 0;
+
+  border-top:
+    1px solid #31516e;
+
+  margin: 25px 0;
+}
+
+@media(max-width:650px) {
+
+  .hero-title {
+    font-size: 30px;
+  }
+
+  .hero p {
+    font-size: 15px;
+  }
+
+  .navigation {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .navigation button {
+    font-size: 14px;
+  }
+
+  main {
+    padding: 14px;
+  }
+
+  .card {
+    padding: 22px;
+  }
+
+  h1 {
+    font-size: 47px;
+  }
+
+  .phone-number {
+    font-size: 31px;
+  }
+
+}
+
+</style>
+
 </head>
 
 <body>
 
-<header>
-  <div class="top">
+<header class="hero">
 
-    <div class="logo">
-      YUSUPHU <span>ODDS VIP</span>
-    </div>
+<div class="hero-title">
 
-    <nav>
-      <button onclick="showView('home')">HOME</button>
-      <button onclick="showView('free')">FREE ODDS</button>
-      <button onclick="showView('vip')">VIP ODDS</button>
-      <button onclick="showView('slip')">MKEKA</button>
-      <button onclick="showView('payment')">LIPA 5,000</button>
-      <button onclick="showView('admin')">ADMIN</button>
-    </nav>
+<span>⚽</span>
 
-  </div>
+<span>YUSUPHU ODDS VIP</span>
+
+</div>
+
+<p>
+Free Odds • VIP TSh 5,000 •
+Bet Slip Calculator
+</p>
+
 </header>
 
+<nav class="navigation">
+
+<button onclick="showPage('home')">
+🏠 HOME
+</button>
+
+<button onclick="showPage('free')">
+🆓 FREE ODDS
+</button>
+
+<button onclick="showPage('vip')">
+⭐ VIP
+</button>
+
+<button onclick="showPage('mkeka')">
+🎟️ MKEKA
+</button>
+
+<button onclick="showPage('payment')">
+💳 LIPA 5,000
+</button>
+
+<button onclick="showPage('admin')">
+🔐 ADMIN
+</button>
+
+</nav>
 
 <main>
 
-  <!-- HOME -->
-  <section id="home" class="view active">
+<section
+id="home"
+class="page active">
 
-    <div class="hero">
+<div class="card">
 
-      <h1>YUSUPHU ODDS VIP</h1>
+<div class="green-title">
+VIP FOOTBALL PREDICTIONS
+</div>
 
-      <p>
-        Karibu YUSUPHU ODDS VIP.
-        Pata Free Odds na VIP Odds zetu.
-        Lipa TSh 5,000 kupata VIP Odds.
-      </p>
+<h1>
+Karibu<br>
+YUSUPHU ODDS VIP
+</h1>
 
-      <button class="btn" onclick="showView('free')">
-        FREE ODDS
-      </button>
+<p>
+Jiunge na huduma ya VIP Odds
+kwa <strong>TSh 5,000.</strong>
+</p>
 
-      <button class="btn green" onclick="showView('payment')">
-        LIPA TSh 5,000
-      </button>
+<button
+class="green-button"
+onclick="showPage('payment')">
 
-      <button class="btn dark" onclick="showView('vip')">
-        VIP ODDS
-      </button>
+💳 LIPA TSh 5,000
 
-    </div>
+</button>
 
+</div>
 
-    <div class="two">
+<div class="card">
 
-      <div class="card">
-        <h2>🆓 FREE ODDS</h2>
-        <p>
-          Angalia baadhi ya odds zinazopatikana bure.
-        </p>
+<h2>
+💳 JINSI YA KULIPA
+</h2>
 
-        <button class="btn" onclick="showView('free')">
-          ANGALIA FREE ODDS
-        </button>
-      </div>
+<p>
+Lipa TSh 5,000 kwa
+M-Pesa:
+</p>
 
+<div class="payment-method">
 
-      <div class="card">
-        <h2>🔐 VIP ODDS</h2>
-        <p>
-          Lipa TSh 5,000 na subiri Admin athibitishe malipo yako.
-        </p>
+<strong>M-Pesa</strong>
 
-        <button class="btn green" onclick="showView('payment')">
-          FUNGUA VIP
-        </button>
-      </div>
+<div class="method-number">
+📱 0793401886
+</div>
 
-    </div>
+</div>
 
-  </section>
+<p>
+Baada ya kufanya malipo,
+utapokea
+<strong>
+Reference/Transaction ID
+</strong>
+kupitia SMS.
+</p>
 
+<button
+class="green-button"
+onclick="showPage('payment')">
 
-  <!-- FREE ODDS -->
-  <section id="free" class="view">
+✅ NIMEFANYA MALIPO
 
-    <div class="card">
+</button>
 
-      <h2>🆓 FREE ODDS</h2>
+</div>
 
-      <p style="margin-bottom:15px;color:#a9c4d9;">
-        Hizi ni odds za bure.
-      </p>
+<div class="card">
 
-      <div id="freeOddsList"></div>
+<h2>
+🆓 FREE ODDS
+</h2>
 
-      <div id="freeEmpty" class="empty hidden">
-        Hakuna Free Odds kwa sasa.
-      </div>
+<p>
+Angalia baadhi ya odds bure
+kabla ya kujiunga na VIP.
+</p>
 
-    </div>
+<button
+class="blue-button"
+onclick="showPage('free')">
 
-  </section>
+ANGALIA FREE ODDS
 
+</button>
 
-  <!-- PAYMENT -->
-  <section id="payment" class="view">
+</div>
 
-    <div class="card">
+<div class="warning">
 
-      <h2>💰 LIPA KUPATA VIP ODDS</h2>
+🔞 <strong>18+</strong> •
 
-      <div class="price">
-        TSh 5,000
-      </div>
+Usibeti zaidi ya uwezo wako.
 
-      <p style="text-align:center;color:#b9d0e3;">
-        Tuma TSh 5,000 kwenye namba hii:
-      </p>
+Bet responsibly.
 
-      <div class="payment-number">
-        0793401886
-      </div>
+</div>
 
-      <p style="text-align:center;color:#9db6ca;">
-        Baada ya kufanya malipo, weka Payment Reference
-        uliyopewa kwenye ujumbe wa malipo.
-      </p>
+</section>
 
-    </div>
+<section
+id="free"
+class="page">
 
+<h2>
+🆓 FREE ODDS
+</h2>
 
-    <div class="card">
+<div id="freeOdds"></div>
 
-      <h2>🧾 Wasilisha Malipo</h2>
+</section>
 
-      <form id="paymentForm">
+<section
+id="vip"
+class="page">
 
-        <label>
-          Payment Reference
-        </label>
+<h2>
+⭐ VIP ODDS
+</h2>
 
-        <input
-          id="paymentReference"
-          type="text"
-          placeholder="Mfano: MPESA123456"
-          required
-        >
+<div class="card">
 
-        <button class="btn green" type="submit">
-          NIMEFANYA MALIPO
-        </button>
+<p>
+Weka Payment Reference yako
+ili kuangalia hali ya malipo.
+</p>
 
-      </form>
+<input
+id="vipReference"
+placeholder="Payment Reference">
 
-      <div id="paymentMessage" class="message hidden"></div>
+<button
+class="green-button"
+onclick="checkVIP()">
 
-    </div>
+🔓 ANGALIA VIP
 
+</button>
 
-    <div class="card">
+<div id="vipMessage"></div>
 
-      <h2>🔎 Angalia Hali ya Malipo</h2>
+</div>
 
-      <input
-        id="checkReference"
-        type="text"
-        placeholder="Weka Payment Reference"
-      >
+<div id="vipOdds"></div>
 
-      <button class="btn" onclick="checkPayment()">
-        ANGALIA MALIPO
-      </button>
+</section>
 
-      <div id="statusMessage" class="message hidden"></div>
+<section
+id="mkeka"
+class="page">
 
-    </div>
+<h2>
+🎟️ MKEKA
+</h2>
 
-  </section>
+<div class="card">
 
+<p>
+Bet Slip Calculator
+</p>
 
-  <!-- VIP -->
-  <section id="vip" class="view">
+<div id="slip"></div>
 
-    <div class="card">
+<h2>
+Total Odds:
+<span id="totalOdds">
+1.00
+</span>
+</h2>
 
-      <h2>🔐 VIP ODDS</h2>
+</div>
 
-      <p style="color:#b9d0e3;margin-bottom:15px;">
-        VIP Odds zinafunguliwa baada ya Admin
-        kuthibitisha malipo yako.
-      </p>
+</section>
 
-      <input
-        id="vipReference"
-        type="text"
-        placeholder="Weka Payment Reference yako"
-      >
+<section
+id="payment"
+class="page">
 
-      <button class="btn green" onclick="unlockVip()">
-        FUNGUA VIP
-      </button>
+<h2>
+💳 LIPA TSh 5,000
+</h2>
 
-      <div id="vipMessage" class="message hidden"></div>
+<div class="card">
 
-    </div>
+<h2>
+💳 JINSI YA KULIPA
+</h2>
 
+<div class="amount">
+TSh 5,000
+</div>
 
-    <div id="vipOddsBox" class="card hidden">
+<p>
+Chagua njia ya malipo:
+</p>
 
-      <h2>🔥 VIP ODDS ZAKO</h2>
+<select
+id="paymentMethod"
+onchange="updatePaymentNumber()">
 
-      <div id="vipOddsList"></div>
+<option value="M-Pesa">
+M-Pesa
+</option>
 
-      <div id="vipEmpty" class="empty hidden">
-        Hakuna VIP Odds kwa sasa.
-      </div>
+<option value="Airtel Money">
+Airtel Money
+</option>
 
-    </div>
+<option value="HaloPesa">
+HaloPesa
+</option>
 
-  </section>
+</select>
 
+<div
+id="selectedPaymentNumber"
+class="phone-number">
 
-  <!-- BET SLIP -->
-  <section id="slip" class="view">
+📱 0793401886
 
-    <div class="card">
+</div>
 
-      <h2>🎫 MKEKA WAKO</h2>
+<p id="paymentInstruction">
+Tuma TSh 5,000 kwenda namba hiyo.
+</p>
 
-      <div id="slipList"></div>
+<hr>
 
-      <div id="slipEmpty" class="empty">
-        Hujachagua odds yoyote.
-      </div>
+<h3>
+🧾 Payment Reference
+</h3>
 
-      <div id="slipTotal" class="total hidden">
+<p>
+Baada ya kufanya malipo,
+fungua SMS ya muamala
+na uweke
+Reference/Transaction ID hapa.
+</p>
 
-        <p>Total Odds</p>
+<input
+id="paymentReference"
+placeholder="Weka Payment Reference">
 
-        <strong id="totalOdds">
-          0.00
-        </strong>
+<button
+class="green-button"
+onclick="submitPayment()">
 
-      </div>
+✅ NIMEFANYA MALIPO
 
-      <button
-        class="btn red"
-        onclick="clearSlip()"
-      >
-        FUTA MKEKA
-      </button>
+</button>
 
-    </div>
+<div id="paymentMessage"></div>
 
-  </section>
+</div>
 
+</section>
 
-  <!-- ADMIN -->
-  <section id="admin" class="view">
+<section
+id="admin"
+class="page">
 
-    <!-- LOGIN -->
+<h2>
+🔐 ADMIN
+</h2>
 
-    <div id="adminLoginBox" class="card">
+<div
+class="card"
+id="loginBox">
 
-      <h2>👨‍💼 ADMIN LOGIN</h2>
+<h2>
+Admin Login
+</h2>
 
-      <p style="color:#a9c4d9;">
-        Ingiza password ya Admin.
-      </p>
+<input
+type="password"
+id="adminPassword"
+placeholder="Admin Password">
 
-      <input
-        id="adminPassword"
-        type="password"
-        placeholder="Admin Password"
-      >
+<button
+class="blue-button"
+onclick="adminLogin()">
 
-      <button
-        class="btn"
-        onclick="adminLogin()"
-      >
-        INGIA ADMIN
-      </button>
+🔐 INGIA ADMIN
 
-      <div id="adminLoginMessage" class="message hidden"></div>
+</button>
 
-    </div>
+<div id="adminMessage"></div>
 
+</div>
 
-    <!-- PANEL -->
+<div
+id="adminPanel"
+style="display:none">
 
-    <div id="adminPanel" class="hidden">
+<div class="card">
 
-      <div class="card">
+<h2>
+➕ ONGEZA ODDS
+</h2>
 
-        <h2>📊 ADMIN PANEL</h2>
+<input
+id="match"
+placeholder="Mfano: Arsenal vs Chelsea">
 
-        <button
-          class="btn red"
-          onclick="adminLogout()"
-        >
-          LOGOUT
-        </button>
+<input
+id="pick"
+placeholder="Mfano: Over 2.5">
 
-      </div>
+<input
+id="odd"
+type="number"
+step="0.01"
+placeholder="Odd mfano 1.85">
 
+<select id="oddType">
 
-      <!-- PAYMENTS -->
+<option value="VIP">
+VIP
+</option>
 
-      <div class="card">
+<option value="FREE">
+FREE
+</option>
 
-        <h2>💰 MALIPO</h2>
+</select>
 
-        <div id="adminPayments"></div>
+<button
+class="green-button"
+onclick="addOdd()">
 
-      </div>
+➕ ONGEZA ODD
 
+</button>
 
-      <!-- ADD ODDS -->
+<div id="addMessage"></div>
 
-      <div class="card">
+</div>
 
-        <h2>➕ ONGEZA ODDS</h2>
+<div class="card">
 
-        <form id="adminOddsForm">
+<h2>
+⚽ ODDS ZILIZOPO
+</h2>
 
-          <label>Match</label>
+<div id="adminOdds"></div>
 
-          <input
-            name="match"
-            placeholder="Mfano: Arsenal vs Chelsea"
-            required
-          >
+</div>
 
-          <label>Pick</label>
+<div class="card">
 
-          <input
-            name="pick"
-            placeholder="Mfano: Over 2.5"
-            required
-          >
+<h2>
+💰 MALIPO
+</h2>
 
-          <label>Odd</label>
+<div id="adminPayments"></div>
 
-          <input
-            name="odd"
-            type="number"
-            step="0.01"
-            placeholder="1.85"
-            required
-          >
+</div>
 
-          <label>Aina ya Odds</label>
+<button
+class="blue-button"
+onclick="logout()">
 
-          <select name="type">
+🚪 LOGOUT
 
-            <option value="VIP">
-              VIP
-            </option>
+</button>
 
-            <option value="FREE">
-              FREE
-            </option>
+</div>
 
-          </select>
-
-          <button
-            class="btn green"
-            type="submit"
-          >
-            ONGEZA ODDS
-          </button>
-
-        </form>
-
-        <div
-          id="addOddsMessage"
-          class="message hidden"
-        ></div>
-
-      </div>
-
-
-      <!-- ALL ODDS -->
-
-      <div class="card">
-
-        <h2>📋 ODDS ZOTE</h2>
-
-        <div id="adminOddsList"></div>
-
-      </div>
-
-    </div>
-
-  </section>
+</section>
 
 </main>
 
-
 <footer>
 
-  <p>
-    © 2026 YUSUPHU ODDS VIP
-  </p>
+<strong>
+YUSUPHU ODDS VIP
+</strong>
 
-  <p style="margin-top:7px;">
-    Odds za burudani. Hakuna uhakika wa ushindi.
-  </p>
+<p>
+© 2026 • Football Predictions
+</p>
+
+<p>
+🔞 18+ Bet Responsibly
+</p>
 
 </footer>
 
-
 <script>
 
-  let adminToken =
-    localStorage.getItem("yusuphuAdminToken") || "";
+var adminToken =
+localStorage.getItem(
+"yusuphuAdminToken"
+) || "";
 
-  let betSlip =
-    JSON.parse(
-      localStorage.getItem("yusuphuBetSlip") || "[]"
-    );
+var paymentNumbers = {
 
+"M-Pesa":
+"0793401886",
 
-  /* =========================
-     NAVIGATION
-  ========================= */
+"Airtel Money":
+"WEKA_NAMBA_AIRTEL",
 
-  function showView(id) {
+"HaloPesa":
+"WEKA_NAMBA_HALOPESA"
 
-    document
-      .querySelectorAll(".view")
-      .forEach(function(view) {
+};
 
-        view.classList.remove("active");
+function showPage(id) {
 
-      });
+var pages =
+document.querySelectorAll(
+".page"
+);
 
-    const target =
-      document.getElementById(id);
+pages.forEach(
+function(page) {
 
-    if (target) {
-      target.classList.add("active");
-    }
+page.classList.remove(
+"active"
+);
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
+});
 
-    if (id === "free") {
-      loadFreeOdds();
-    }
+var selected =
+document.getElementById(id);
 
-    if (id === "vip") {
-      loadVipOddsPreview();
-    }
+if (selected) {
 
-    if (id === "slip") {
-      renderSlip();
-    }
+selected.classList.add(
+"active"
+);
 
-    if (id === "admin") {
+}
 
-      if (adminToken) {
-        showAdminPanel();
-      } else {
-        document
-          .getElementById("adminLoginBox")
-          .classList.remove("hidden");
+window.scrollTo(0,0);
 
-        document
-          .getElementById("adminPanel")
-          .classList.add("hidden");
-      }
+if (id === "free") {
 
-    }
+loadFreeOdds();
 
-  }
+}
 
+if (id === "mkeka") {
 
-  /* =========================
-     LOAD ODDS
-  ========================= */
+loadSlip();
 
-  async function getOdds() {
+}
 
-    const response =
-      await fetch("/api/odds");
+if (
+id === "admin" &&
+adminToken
+) {
 
-    if (!response.ok) {
-      throw new Error("Imeshindikana kupata odds.");
-    }
+loadAdmin();
 
-    return await response.json();
+}
 
-  }
+if (id === "payment") {
 
+updatePaymentNumber();
 
-  async function loadFreeOdds() {
+}
 
-    const list =
-      document.getElementById("freeOddsList");
+}
 
-    const empty =
-      document.getElementById("freeEmpty");
+function escapeHTML(value) {
 
-    try {
+return String(value).replace(
+/[&<>"']/g,
+function(char) {
 
-      const odds =
-        await getOdds();
+var map = {
 
-      const free =
-        odds.filter(function(item) {
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#039;"
 
-          return String(item.type).toUpperCase()
-            === "FREE";
+};
 
-        });
+return map[char];
 
-      empty.classList.toggle(
-        "hidden",
-        free.length !== 0
-      );
+});
 
-      list.innerHTML =
-        free.map(renderOdd).join("");
+}
 
-    } catch (error) {
+function updatePaymentNumber() {
 
-      list.innerHTML =
-        '<div class="message">Imeshindikana kupakia odds.</div>';
+var method =
+document.getElementById(
+"paymentMethod"
+).value;
 
-    }
+var number =
+paymentNumbers[method];
 
-  }
+var numberBox =
+document.getElementById(
+"selectedPaymentNumber"
+);
 
+var instruction =
+document.getElementById(
+"paymentInstruction"
+);
 
-  function renderOdd(item) {
+if (
+number &&
+number.indexOf("WEKA_") !== 0
+) {
 
-    return `
-      <div class="odd">
+numberBox.textContent =
+"📱 " + number;
 
-        <div style="flex:1">
+instruction.textContent =
+"Tuma TSh 5,000 kwenda namba hiyo.";
 
-          <h3>
-            ${escapeHtml(item.match)}
-          </h3>
+} else {
 
-          <p>
-            ${escapeHtml(item.pick)}
-          </p>
+numberBox.textContent =
+"📱 Namba bado haijawekwa";
 
-          <div class="odd-actions">
+instruction.textContent =
+"Njia hii bado haijawa tayari. Tumia M-Pesa kwa sasa.";
 
-            <button
-              class="btn"
-              onclick='addToSlip(${JSON.stringify(item)})'
-            >
-              + MKEKA
-            </button>
+}
 
-          </div>
+}
 
-        </div>
+async function loadFreeOdds() {
 
-        <div class="odd-value">
-          ${Number(item.odd).toFixed(2)}
-        </div>
+var box =
+document.getElementById(
+"freeOdds"
+);
 
-      </div>
-    `;
+try {
 
-  }
+var response =
+await fetch("/api/odds");
 
+var data =
+await response.json();
 
-  /* =========================
-     VIP
-  ========================= */
+var free =
+data.filter(
+function(item) {
 
-  async function unlockVip() {
+return item.type === "FREE";
 
-    const reference =
-      document
-        .getElementById("vipReference")
-        .value
-        .trim();
+});
 
-    const message =
-      document.getElementById("vipMessage");
+if (!free.length) {
 
-    if (!reference) {
+box.innerHTML =
+'<div class="card">' +
+'<h2>Hakuna Free Odds</h2>' +
+'<p>Admin hajaweka Free Odds bado.</p>' +
+'</div>';
 
-      message.textContent =
-        "Weka Payment Reference kwanza.";
+return;
 
-      message.classList.remove("hidden");
+}
 
-      return;
-    }
+box.innerHTML =
+free.map(
+function(item) {
 
-    try {
+return (
 
-      const response =
-        await fetch(
-          "/api/payment-status/" +
-          encodeURIComponent(reference)
-        );
+'<div class="odd-card">' +
 
-      const data =
-        await response.json();
+'<div>' +
 
-      message.textContent =
-        data.message || "Hakuna taarifa.";
+'<strong>' +
 
-      message.classList.remove("hidden");
+escapeHTML(
+item.match
+) +
 
-      if (
-        data.success &&
-        data.status === "APPROVED"
-      ) {
+'</strong><br>' +
 
-        document
-          .getElementById("vipOddsBox")
-          .classList.remove("hidden");
+escapeHTML(
+item.pick
+) +
 
-        loadVipOdds();
+'</div>' +
 
-      } else {
+'<div class="odd-number">' +
 
-        document
-          .getElementById("vipOddsBox")
-          .classList.add("hidden");
+Number(
+item.odd
+).toFixed(2) +
 
-      }
+'</div>' +
 
-    } catch (error) {
+'</div>'
 
-      message.textContent =
-        "Tatizo la server. Jaribu tena.";
+);
 
-      message.classList.remove("hidden");
+}
+).join("");
 
-    }
+} catch (error) {
 
-  }
+box.innerHTML =
+'<div class="card">' +
+'Imeshindikana kupata odds.' +
+'</div>';
 
+}
 
-  async function loadVipOddsPreview() {
+}
 
-    document
-      .getElementById("vipOddsBox")
-      .classList.add("hidden");
+async function submitPayment() {
 
-  }
+var input =
+document.getElementById(
+"paymentReference"
+);
 
+var method =
+document.getElementById(
+"paymentMethod"
+).value;
 
-  async function loadVipOdds() {
+var message =
+document.getElementById(
+"paymentMessage"
+);
 
-    const list =
-      document.getElementById("vipOddsList");
+var reference =
+input.value.trim();
 
-    const empty =
-      document.getElementById("vipEmpty");
+if (!reference) {
 
-    try {
+message.innerHTML =
+'<p class="error">' +
+'Weka Payment Reference.' +
+'</p>';
 
-      const odds =
-        await getOdds();
+return;
 
-      const vip =
-        odds.filter(function(item) {
+}
 
-          return String(item.type).toUpperCase()
-            === "VIP";
+if (
+!paymentNumbers[method] ||
+paymentNumbers[method]
+.indexOf("WEKA_") === 0
+) {
 
-        });
+message.innerHTML =
+'<p class="error">' +
+'Tafadhali tumia M-Pesa kwa sasa.' +
+'</p>';
 
-      empty.classList.toggle(
-        "hidden",
-        vip.length !== 0
-      );
+return;
 
-      list.innerHTML =
-        vip.map(renderOdd).join("");
+}
 
-    } catch (error) {
+try {
 
-      list.innerHTML =
-        '<div class="message">Imeshindikana kupakia VIP Odds.</div>';
+var response =
+await fetch(
+"/api/payment",
+{
 
-    }
+method:"POST",
 
-  }
+headers:{
+"Content-Type":
+"application/json"
+},
 
+body:JSON.stringify({
 
-  /* =========================
-     PAYMENT
-  ========================= */
+reference:reference,
 
-  document
-    .getElementById("paymentForm")
-    .addEventListener(
-      "submit",
-      async function(event) {
+method:method
 
-        event.preventDefault();
+})
 
-        const reference =
-          document
-            .getElementById("paymentReference")
-            .value
-            .trim();
+}
+);
 
-        const message =
-          document.getElementById(
-            "paymentMessage"
-          );
+var data =
+await response.json();
 
-        if (!reference) {
+if (!response.ok) {
 
-          message.textContent =
-            "Weka Payment Reference.";
+message.innerHTML =
+'<p class="error">' +
+escapeHTML(
+data.message
+) +
+'</p>';
 
-          message.classList.remove("hidden");
+return;
 
-          return;
-        }
+}
 
-        try {
+message.innerHTML =
+'<p class="success">' +
+escapeHTML(
+data.message
+) +
+'<br>Reference: ' +
+escapeHTML(
+reference
+) +
+'</p>';
 
-          const response =
-            await fetch(
-              "/api/payment",
-              {
-                method: "POST",
+} catch (error) {
 
-                headers: {
-                  "Content-Type":
-                    "application/json"
-                },
+message.innerHTML =
+'<p class="error">' +
+'Server haijapatikana.' +
+'</p>';
 
-                body: JSON.stringify({
-                  reference: reference
-                })
-              }
-            );
+}
 
-          const data =
-            await response.json();
+}
 
-          message.textContent =
-            data.message ||
-            "Malipo yametumwa.";
+async function checkVIP() {
 
-          message.classList.remove("hidden");
+var reference =
+document.getElementById(
+"vipReference"
+).value.trim();
 
-          if (data.success) {
+var message =
+document.getElementById(
+"vipMessage"
+);
 
-            document
-              .getElementById(
-                "checkReference"
-              )
-              .value = reference;
+var box =
+document.getElementById(
+"vipOdds"
+);
 
-            document
-              .getElementById(
-                "vipReference"
-              )
-              .value = reference;
+if (!reference) {
 
-          }
+message.innerHTML =
+'<p class="error">' +
+'Weka Payment Reference.' +
+'</p>';
 
-        } catch (error) {
+return;
 
-          message.textContent =
-            "Server haijapatikana. Jaribu tena.";
+}
 
-          message.classList.remove("hidden");
+try {
 
-        }
+var response =
+await fetch(
+"/api/payment-status/" +
+encodeURIComponent(
+reference
+)
+);
 
-      }
-    );
+var data =
+await response.json();
 
+if (!response.ok) {
 
-  async function checkPayment() {
+message.innerHTML =
+'<p class="error">' +
+escapeHTML(
+data.message
+) +
+'</p>';
 
-    const reference =
-      document
-        .getElementById("checkReference")
-        .value
-        .trim();
+box.innerHTML = "";
 
-    const message =
-      document.getElementById(
-        "statusMessage"
-      );
+return;
 
-    if (!reference) {
+}
 
-      message.textContent =
-        "Weka Payment Reference.";
+if (
+data.status !== "APPROVED"
+) {
 
-      message.classList.remove("hidden");
+message.innerHTML =
+'<p class="error">' +
+escapeHTML(
+data.message
+) +
+'</p>';
 
-      return;
-    }
+box.innerHTML = "";
 
-    try {
+return;
 
-      const response =
-        await fetch(
-          "/api/payment-status/" +
-          encodeURIComponent(reference)
-        );
+}
 
-      const data =
-        await response.json();
+message.innerHTML =
+'<p class="success">' +
+'Malipo yamethibitishwa. VIP imefunguliwa.' +
+'</p>';
 
-      message.textContent =
-        data.message ||
-        "Hakuna taarifa.";
+var oddsResponse =
+await fetch(
+"/api/odds"
+);
 
-      message.classList.remove("hidden");
+var oddsData =
+await oddsResponse.json();
 
-    } catch (error) {
+var vip =
+oddsData.filter(
+function(item) {
 
-      message.textContent =
-        "Imeshindikana kuangalia malipo.";
+return item.type === "VIP";
 
-      message.classList.remove("hidden");
+});
 
-    }
+if (!vip.length) {
 
-  }
+box.innerHTML =
+'<div class="card">' +
+'<p>Hakuna VIP Odds zilizowekwa bado.</p>' +
+'</div>';
 
+return;
 
-  /* =========================
-     BET SLIP
-  ========================= */
+}
 
-  function addToSlip(item) {
+box.innerHTML =
+vip.map(
+function(item) {
 
-    const exists =
-      betSlip.some(function(selected) {
+return (
 
-        return selected.id === item.id;
+'<div class="odd-card">' +
 
-      });
+'<div>' +
 
-    if (exists) {
+'<strong>' +
 
-      alert("Odd hii tayari ipo kwenye MKEKA.");
+escapeHTML(
+item.match
+) +
 
-      return;
-    }
+'</strong><br>' +
 
-    betSlip.push({
-      id: item.id,
-      match: item.match,
-      pick: item.pick,
-      odd: Number(item.odd)
-    });
+escapeHTML(
+item.pick
+) +
 
-    saveSlip();
+'</div>' +
 
-    alert("Odd imeongezwa kwenye MKEKA.");
+'<div class="odd-number">' +
 
-    renderSlip();
+Number(
+item.odd
+).toFixed(2) +
 
-  }
+'</div>' +
 
+'</div>'
 
-  function removeFromSlip(id) {
+);
 
-    betSlip =
-      betSlip.filter(function(item) {
+}
+).join("");
 
-        return item.id !== id;
+} catch (error) {
 
-      });
+message.innerHTML =
+'<p class="error">' +
+'Tatizo la server.' +
+'</p>';
 
-    saveSlip();
+}
 
-    renderSlip();
-
-  }
-
-
-  function clearSlip() {
-
-    betSlip = [];
-
-    saveSlip();
-
-    renderSlip();
-
-  }
-
-
-  function renderSlip() {
-
-    const list =
-      document.getElementById("slipList");
-
-    const empty =
-      document.getElementById("slipEmpty");
-
-    const totalBox =
-      document.getElementById("slipTotal");
-
-    const totalElement =
-      document.getElementById("totalOdds");
-
-    if (betSlip.length === 0) {
-
-      list.innerHTML = "";
-
-      empty.classList.remove("hidden");
-
-      totalBox.classList.add("hidden");
-
-      return;
-    }
-
-    empty.classList.add("hidden");
-
-    let total = 1;
-
-    list.innerHTML =
-      betSlip.map(function(item) {
-
-        total *= Number(item.odd);
-
-        return `
-          <div class="slip-item">
-
-            <div>
-              <strong>
-                ${escapeHtml(item.match)}
-              </strong>
-
-              <div style="color:#a9c4d9">
-                ${escapeHtml(item.pick)}
-              </div>
-
-              <div style="color:#20b5ff">
-                Odd: ${Number(item.odd).toFixed(2)}
-              </div>
-            </div>
-
-            <button
-              class="btn red"
-              onclick="removeFromSlip(${item.id})"
-            >
-              X
-            </button>
-
-          </div>
-        `;
-
-      }).join("");
-
-    totalElement.textContent =
-      total.toFixed(2);
-
-    totalBox.classList.remove("hidden");
-
-  }
-
-
-  function saveSlip() {
-
-    localStorage.setItem(
-      "yusuphuBetSlip",
-      JSON.stringify(betSlip)
-    );
-
-  }
-
-
-  /* =========================
-     ADMIN LOGIN
-  ========================= */
-
-  async function adminLogin() {
-
-    const password =
-      document
-        .getElementById("adminPassword")
-        .value;
-
-    const message =
-      document.getElementById(
-        "adminLoginMessage"
-      );
-
-    if (!password) {
-
-      message.textContent =
-        "Weka Admin Password.";
-
-      message.classList.remove("hidden");
-
-      return;
-    }
-
-    try {
-
-      const response =
-        await fetch(
-          "/api/admin/login",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-
-            body: JSON.stringify({
-              password: password
-            })
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-
-        message.textContent =
-          data.message ||
-          "Password sio sahihi.";
-
-        message.classList.remove("hidden");
-
-        return;
-      }
-
-      adminToken = data.token;
-
-      localStorage.setItem(
-        "yusuphuAdminToken",
-        adminToken
-      );
-
-      showAdminPanel();
-
-    } catch (error) {
-
-      message.textContent =
-        "Server haijapatikana.";
-
-      message.classList.remove("hidden");
-
-    }
-
-  }
-
-
-  function showAdminPanel() {
-
-    document
-      .getElementById("adminLoginBox")
-      .classList.add("hidden");
-
-    document
-      .getElementById("adminPanel")
-      .classList.remove("hidden");
-
-    loadAdminPayments();
-
-    loadAdminOdds();
-
-  }
-
-
-  /* =========================
-     ADMIN REQUEST
-  ========================= */
-
-  function adminHeaders() {
-
-    return {
-      "Content-Type":
-        "application/json",
-
-      "Authorization":
-        "Bearer " + adminToken
-    };
-
-  }
-
-
-  async function loadAdminPayments() {
-
-    const box =
-      document.getElementById(
-        "adminPayments"
-      );
-
-    try {
-
-      const response =
-        await fetch(
-          "/api/admin/payments",
-          {
-            headers: adminHeaders()
-          }
-        );
-
-      if (response.status === 401) {
-
-        adminLogout();
-
-        return;
-      }
-
-      const payments =
-        await response.json();
-
-      if (!payments.length) {
-
-        box.innerHTML =
-          '<div class="empty">Hakuna malipo bado.</div>';
-
-        return;
-      }
-
-      box.innerHTML =
-        payments.map(function(payment) {
-
-          const statusClass =
-            payment.status === "APPROVED"
-              ? "approved"
-              : payment.status === "REJECTED"
-              ? "rejected"
-              : "pending";
-
-          return `
-            <div class="payment-item">
-
-              <strong>
-                Reference:
-                ${escapeHtml(payment.reference)}
-              </strong>
-
-              <p>
-                Kiasi: TSh
-                ${Number(payment.amount).toLocaleString()}
-              </p>
-
-              <p>
-                Namba:
-                ${escapeHtml(payment.phone)}
-              </p>
-
-              <span class="status ${statusClass}">
-                ${escapeHtml(payment.status)}
-              </span>
-
-              <div style="margin-top:10px">
-
-                ${
-                  payment.status === "PENDING"
-                  ? `
-                    <button
-                      class="btn green"
-                      onclick="approvePayment(${payment.id})"
-                    >
-                      APPROVE
-                    </button>
-
-                    <button
-                      class="btn red"
-                      onclick="rejectPayment(${payment.id})"
-                    >
-                      REJECT
-                    </button>
-                  `
-                  : ""
-                }
-
-              </div>
-
-            </div>
-          `;
-
-        }).join("");
-
-    } catch (error) {
-
-      box.innerHTML =
-        '<div class="message">Imeshindikana kupata malipo.</div>';
-
-    }
-
-  }
-
-
-  async function approvePayment(id) {
-
-    const response =
-      await fetch(
-        "/api/admin/payments/" +
-        id +
-        "/approve",
-        {
-          method: "POST",
-          headers: adminHeaders()
-        }
-      );
-
-    const data =
-      await response.json();
-
-    if (!response.ok) {
-
-      alert(
-        data.message ||
-        "Imeshindikana."
-      );
-
-      return;
-    }
-
-    alert("Malipo yame-APPROVE.");
-
-    loadAdminPayments();
-
-  }
-
-
-  async function rejectPayment(id) {
-
-    const response =
-      await fetch(
-        "/api/admin/payments/" +
-        id +
-        "/reject",
-        {
-          method: "POST",
-          headers: adminHeaders()
-        }
-      );
-
-    const data =
-      await response.json();
-
-    if (!response.ok) {
-
-      alert(
-        data.message ||
-        "Imeshindikana."
-      );
-
-      return;
-    }
-
-    alert("Malipo yamekataliwa.");
-
-    loadAdminPayments();
-
-  }
-
-
-  /* =========================
-     ADMIN ODDS
-  ========================= */
-
-  document
-    .getElementById("adminOddsForm")
-    .addEventListener(
-      "submit",
-      async function(event) {
-
-        event.preventDefault();
-
-        const form =
-          new FormData(event.target);
-
-        const body =
-          Object.fromEntries(
-            form.entries()
-          );
-
-        const message =
-          document.getElementById(
-            "addOddsMessage"
-          );
-
-        try {
-
-          const response =
-            await fetch(
-              "/api/admin/odds",
-              {
-                method: "POST",
-
-                headers:
-                  adminHeaders(),
-
-                body:
-                  JSON.stringify(body)
-              }
-            );
-
-          const data =
-            await response.json();
-
-          if (!response.ok) {
-
-            message.textContent =
-              data.message ||
-              "Imeshindikana kuongeza odd.";
-
-            message.classList.remove(
-              "hidden"
-            );
-
-            return;
-          }
-
-          event.target.reset();
-
-          message.textContent =
-            "Odd imeongezwa vizuri.";
-
-          message.classList.remove(
-            "hidden"
-          );
-
-          loadAdminOdds();
-
-        } catch (error) {
-
-          message.textContent =
-            "Server haijapatikana.";
-
-          message.classList.remove(
-            "hidden"
-          );
-
-        }
-
-      }
-    );
-
-
-  async function loadAdminOdds() {
-
-    const box =
-      document.getElementById(
-        "adminOddsList"
-      );
-
-    try {
-
-      const response =
-        await fetch("/api/odds");
-
-      const odds =
-        await response.json();
-
-      if (!odds.length) {
-
-        box.innerHTML =
-          '<div class="empty">Hakuna odds.</div>';
-
-        return;
-      }
-
-      box.innerHTML =
-        odds.map(function(item) {
-
-          return `
-            <div class="admin-item">
-
-              <div>
-
-                <strong>
-                  ${escapeHtml(item.match)}
-                </strong>
-
-                <div>
-                  ${escapeHtml(item.pick)}
-                </div>
-
-                <div style="color:#20b5ff">
-                  ${Number(item.odd).toFixed(2)}
-                  -
-                  ${escapeHtml(item.type)}
-                </div>
-
-              </div>
-
-              <button
-                class="btn red"
-                onclick="deleteOdd(${item.id})"
-              >
-                Futa
-              </button>
-
-            </div>
-          `;
-
-        }).join("");
-
-    } catch (error) {
-
-      box.innerHTML =
-        '<div class="message">Imeshindikana kupata odds.</div>';
-
-    }
-
-  }
-
-
-  async function deleteOdd(id) {
-
-    if (
-      !confirm(
-        "Una uhakika unataka kufuta odd hii?"
-      )
-    ) {
-      return;
-    }
-
-    const response =
-      await fetch(
-        "/api/admin/odds/" +
-        id,
-        {
-          method: "DELETE",
-          headers: adminHeaders()
-        }
-      );
-
-    const data =
-      await response.json();
-
-    if (!response.ok) {
-
-      alert(
-        data.message ||
-        "Imeshindikana kufuta odd."
-      );
-
-      return;
-    }
-
-    loadAdminOdds();
-
-  }
-
-
-  /* =========================
-     ADMIN LOGOUT
-  ========================= */
-
-  async function adminLogout() {
-
-    try {
-
-      if (adminToken) {
-
-        await fetch(
-          "/api/admin/logout",
-          {
-            method: "POST",
-            headers: adminHeaders()
-          }
-        );
-
-      }
-
-    } catch (error) {
-      // Endelea na logout
-    }
-
-    adminToken = "";
-
-    localStorage.removeItem(
-      "yusuphuAdminToken"
-    );
-
-    document
-      .getElementById("adminPanel")
-      .classList.add("hidden");
-
-    document
-      .getElementById("adminLoginBox")
-      .classList.remove("hidden");
-
-    document
-      .getElementById("adminPassword")
-      .value = "";
-
-  }
-
-
-  /* =========================
-     SECURITY
-  ========================= */
-
-  function escapeHtml(value) {
-
-    return String(value)
-      .replace(
-        /[&<>"']/g,
-        function(character) {
-
-          return {
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#039;"
-          }[character];
-
-        }
-      );
-
-  }
-
-
-  /* =========================
-     START
-  ========================= */
-
-  renderSlip();
-
-  if (adminToken) {
-    // Admin ataonekana baada ya kubonyeza ADMIN
-  }
-
-</script>
-
-</body>
-        </html>
+}
