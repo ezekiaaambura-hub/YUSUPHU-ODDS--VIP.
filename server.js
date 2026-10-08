@@ -462,8 +462,10 @@ async function submitPayment(event) {
     },
 
     body: JSON.stringify({
-      reference: reference
-    })
+  reference: reference,
+  method: document.querySelector('input[name="paymentMethod"]:checked')?.value
+})
+          })
 
   });
 
@@ -640,7 +642,10 @@ async function loadAdmin() {
         \${escapeHtml(p.reference)}
 
         <br>
+<br>
 
+<strong>Njia ya Malipo:</strong>
+${escapeHtml(p.method || "Haijawekwa")}
         <strong>Status:</strong>
         \${escapeHtml(p.status)}
 
@@ -867,10 +872,15 @@ app.delete(
 // ===============================
 app.post("/api/payment", (req, res) => {
 
-  const { reference } = req.body;
+  const { reference, method } = req.body;
 
   if (!reference) {
-
+if (!method) {
+  return res.status(400).json({
+    success: false,
+    message: "Chagua njia ya malipo."
+  });
+}
     return res.status(400).json({
       success: false,
       message: "Weka Payment Reference."
@@ -878,17 +888,23 @@ app.post("/api/payment", (req, res) => {
 
   }
 
-  payments.unshift({
 
-    id: Date.now(),
 
-    reference: reference,
+    payments.unshift({
+  id: Date.now(),
+  reference: reference,
+  amount: PAYMENT_AMOUNT,
+  phone: PAYMENT_NUMBER,
+  method: method,
+  status: "PENDING"
+});
 
-    amount: PAYMENT_AMOUNT,
+    
 
-    phone: PAYMENT_NUMBER,
+    
 
-    status: "PENDING"
+    
+
 
   });
 
