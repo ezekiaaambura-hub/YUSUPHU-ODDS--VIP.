@@ -345,21 +345,161 @@
 
       .odd-value {
         font-size: 14px;
-      }
 
-      .payment-number {
-        font-size: 23px;
-      }
-    }
-  </style>
-</head>
+<!-- PAYMENT -->
+<section id="payment" class="view">
 
-<body>
+  <div class="card">
 
-<header>
-  <div class="top">
+    <h2>💰 LIPA TSh 5,000 KUPATA VIP</h2>
 
-    <div class="logo">
+    <div class="price">
+      TSh 5,000
+    </div>
+
+    <p style="text-align:center;color:#b9d0e3;">
+      Chagua mtandao unaotaka kutumia kulipia:
+    </p>
+
+    <label>Chagua Mtandao wa Malipo</label>
+
+    <select id="paymentMethod" onchange="showPaymentNumber()">
+
+      <option value="">
+        -- Chagua Mtandao --
+      </option>
+
+      <option value="M-Pesa">
+        🟢 M-Pesa
+      </option>
+
+      <option value="Airtel Money">
+        🔴 Airtel Money
+      </option>
+
+      <option value="HaloPesa">
+        🟡 HaloPesa
+      </option>
+
+    </select>
+
+    <div
+      id="paymentNumberBox"
+      class="message hidden"
+      style="text-align:center;"
+    >
+
+      <p>
+        Tuma TSh 5,000 kwenye namba:
+      </p>
+
+      <div
+        id="selectedPaymentNumber"
+        class="payment-number"
+      >
+        -
+      </div>
+
+      <p id="selectedPaymentMethod"></p>
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h2>🧾 Wasilisha Malipo</h2>
+
+    <p style="color:#a9c4d9;margin-bottom:10px;">
+      Baada ya kufanya malipo, weka Payment Reference
+      uliyopewa kwenye ujumbe wa malipo.
+    </p>
+
+    <form id="paymentForm">
+
+      <label>
+        Mtandao Uliotumia
+      </label>
+
+      <select id="paymentMethodForm" required>
+
+        <option value="">
+          -- Chagua Mtandao --
+        </option>
+
+        <option value="M-Pesa">
+          🟢 M-Pesa
+        </option>
+
+        <option value="Airtel Money">
+          🔴 Airtel Money
+        </option>
+
+        <option value="HaloPesa">
+          🟡 HaloPesa
+        </option>
+
+      </select>
+
+
+      <label>
+        Payment Reference
+      </label>
+
+      <input
+        id="paymentReference"
+        type="text"
+        placeholder="Mfano: MPESA123456"
+        required
+      >
+
+
+      <button
+        class="btn green"
+        type="submit"
+      >
+        NIMEFANYA MALIPO
+      </button>
+
+    </form>
+
+
+    <div
+      id="paymentMessage"
+      class="message hidden"
+    ></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h2>🔎 Angalia Hali ya Malipo</h2>
+
+    <input
+      id="checkReference"
+      type="text"
+      placeholder="Weka Payment Reference"
+    >
+
+    <button
+      class="btn"
+      onclick="checkPayment()"
+    >
+      ANGALIA MALIPO
+    </button>
+
+    <div
+      id="statusMessage"
+      class="message hidden"
+    ></div>
+
+  </div>
+
+</section>
+
+    
       YUSUPHU <span>ODDS VIP</span>
     </div>
 
@@ -1117,26 +1257,153 @@
                 "checkReference"
               )
               .value = reference;
+function showPaymentNumber() {
 
-            document
-              .getElementById(
-                "vipReference"
-              )
-              .value = reference;
+  const method =
+    document.getElementById("paymentMethod").value;
 
-          }
+  const box =
+    document.getElementById("paymentNumberBox");
 
-        } catch (error) {
+  const number =
+    document.getElementById("selectedPaymentNumber");
 
-          message.textContent =
-            "Server haijapatikana. Jaribu tena.";
+  const methodText =
+    document.getElementById("selectedPaymentMethod");
 
-          message.classList.remove("hidden");
+  const numbers = {
+    "M-Pesa": "0793401886",
+    "Airtel Money": "0692359311",
+    "HaloPesa": "0613431930"
+  };
+
+  if (!method) {
+
+    box.classList.add("hidden");
+
+    return;
+  }
+
+  number.textContent =
+    numbers[method];
+
+  methodText.textContent =
+    "Mtandao: " + method;
+
+  box.classList.remove("hidden");
+}
+
+
+document
+  .getElementById("paymentForm")
+  .addEventListener(
+    "submit",
+    async function(event) {
+
+      event.preventDefault();
+
+      const method =
+        document
+          .getElementById("paymentMethodForm")
+          .value;
+
+      const reference =
+        document
+          .getElementById("paymentReference")
+          .value
+          .trim();
+
+      const message =
+        document.getElementById(
+          "paymentMessage"
+        );
+
+
+      if (!method) {
+
+        message.textContent =
+          "Chagua mtandao wa malipo.";
+
+        message.classList.remove("hidden");
+
+        return;
+      }
+
+
+      if (!reference) {
+
+        message.textContent =
+          "Weka Payment Reference.";
+
+        message.classList.remove("hidden");
+
+        return;
+      }
+
+
+      try {
+
+        const response =
+          await fetch(
+            "/api/payment",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+                method: method,
+                reference: reference
+              })
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        message.textContent =
+          data.message ||
+          "Malipo yametumwa.";
+
+        message.classList.remove(
+          "hidden"
+        );
+
+
+        if (data.success) {
+
+          document
+            .getElementById(
+              "checkReference"
+            )
+            .value = reference;
+
+          document
+            .getElementById(
+              "vipReference"
+            )
+            .value = reference;
 
         }
 
+      } catch (error) {
+
+        message.textContent =
+          "Server haijapatikana. Jaribu tena.";
+
+        message.classList.remove(
+          "hidden"
+        );
+
       }
-    );
+
+    }
+  );
 
 
   async function checkPayment() {
