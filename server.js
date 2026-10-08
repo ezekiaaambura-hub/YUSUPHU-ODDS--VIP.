@@ -1,20 +1,376 @@
-const express=require('express');
-const path=require('path');
-const app=express();
-const PORT=process.env.PORT||3000;
-const ADMIN_PASSWORD=process.env.ADMIN_PASSWORD||'YUSUPHU2026';
-app.use(express.json());app.use(express.urlencoded({extended:true}));app.use(express.static(path.join(__dirname,'public')));
-const payments=[];
-let odds=[{id:1,title:'ODDS ZA LEO',matches:['Manchester United — Double Chance','Barcelona — Over 1.5 Goals','Real Madrid — To Win']}];
-function auth(req,res,next){if(req.headers['x-admin-password']!==ADMIN_PASSWORD)return res.status(401).json({success:false,message:'Password ya Admin si sahihi.'});next()}
-app.get('/',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
-app.get('/api/health',(req,res)=>res.json({success:true,message:'YUSUPHU ODDS VIP iko hewani.'}));
-app.post('/api/payment',(req,res)=>{const reference=String(req.body.reference||'').trim(),method=String(req.body.method||'').trim();if(!method)return res.status(400).json({success:false,message:'Chagua njia ya malipo.'});if(!reference)return res.status(400).json({success:false,message:'Weka Payment Reference.'});const p={id:Date.now(),reference,method,amount:5000,status:'pending',createdAt:new Date().toISOString()};payments.unshift(p);res.json({success:true,message:'Malipo yamepokelewa. Subiri Admin athibitishe.',payment:p})});
-app.get('/api/payment/:reference',(req,res)=>{const p=payments.find(x=>x.reference.toLowerCase()===String(req.params.reference).toLowerCase());if(!p)return res.status(404).json({success:false,message:'Payment Reference haijapatikana.'});res.json({success:true,payment:p})});
-app.get('/api/vip/:reference',(req,res)=>{const p=payments.find(x=>x.reference.toLowerCase()===String(req.params.reference).toLowerCase()&&x.status==='approved');if(!p)return res.status(403).json({success:false,message:'VIP bado haijafunguliwa. Subiri Admin athibitishe malipo.'});res.json({success:true,message:'VIP imefunguliwa.',odds})});
-app.get('/api/admin/payments',auth,(req,res)=>res.json({success:true,payments}));
-app.post('/api/admin/payments/:id/approve',auth,(req,res)=>{const p=payments.find(x=>x.id===Number(req.params.id));if(!p)return res.status(404).json({success:false,message:'Malipo hayajapatikana.'});p.status='approved';p.approvedAt=new Date().toISOString();res.json({success:true,message:'Malipo yame-approve. VIP imefunguliwa.',payment:p})});
-app.post('/api/admin/payments/:id/reject',auth,(req,res)=>{const p=payments.find(x=>x.id===Number(req.params.id));if(!p)return res.status(404).json({success:false,message:'Malipo hayajapatikana.'});p.status='rejected';res.json({success:true,message:'Malipo yamekataliwa.',payment:p})});
-app.post('/api/admin/odds',auth,(req,res)=>{const title=String(req.body.title||'').trim();const matches=Array.isArray(req.body.matches)?req.body.matches.map(String).map(x=>x.trim()).filter(Boolean):[];if(!title||!matches.length)return res.status(400).json({success:false,message:'Weka title na odds.'});const item={id:Date.now(),title,matches};odds.unshift(item);res.json({success:true,message:'Odds zimeongezwa.',odds:item})});
-app.get('/api/admin/odds',auth,(req,res)=>res.json({success:true,odds}));
-app.listen(PORT,'0.0.0.0',()=>console.log(`YUSUPHU ODDS VIP running on ${PORT}`));
+const express = require("express");
+const path = require("path");
+const fs = require("fs");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "YUSUPHU2026";
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ===============================
+// PUBLIC FOLDER
+// ===============================
+app.use(express.static(path.join(__dirname, "public")));
+
+// ===============================
+// DATA STORAGE
+// ===============================
+const dataDir = path.join(__dirname, "data");
+const dataFile = path.join(dataDir, "store.json");
+
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+if (!fs.existsSync(dataFile)) {
+  fs.writeFileSync(
+    dataFile,
+    JSON.stringify(
+      {
+        payments: [],
+        odds: []
+      },
+      null,
+      2
+    )
+  );
+}
+
+function loadStore() {
+  try {
+    return JSON.parse(fs.readFileSync(dataFile, "utf8"));
+  } catch (error) {
+    return {
+      payments: [],
+      odds: []
+    };
+  }
+}
+
+function saveStore(store) {
+  fs.writeFileSync(
+    dataFile,
+    JSON.stringify(store, null, 2)
+  );
+}
+
+// ===============================
+// HOME
+// ===============================
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ===============================
+// HEALTH CHECK
+// ===============================
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "YUSUPHU ODDS VIP server iko hewani."
+  });
+});
+
+// ===============================
+// CUSTOMER PAYMENT
+// ===============================
+app.post("/api/payment", (req, res) => {
+  const { reference, method } = req.body;
+
+  if (!method) {
+    return res.status(400).json({
+      success: false,
+      message: "Chagua njia ya malipo."
+    });
+  }
+
+  if (!reference || !reference.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "Weka Payment Reference."
+    });
+  }
+
+  const store = loadStore();
+
+  const cleanReference = reference.trim();
+
+  const existing = store.payments.find(
+    payment =>
+      payment.reference.toLowerCase() ===
+      cleanReference.toLowerCase()
+  );
+
+  if (existing) {
+    return res.status(400).json({
+      success: false,
+      message: "Payment Reference hii tayari imetumwa."
+    });
+  }
+
+  const payment = {
+    id: Date.now(),
+    reference: cleanReference,
+    method: method,
+    amount: 5000,
+    status: "pending",
+    createdAt: new Date().toISOString()
+  };
+
+  store.payments.unshift(payment);
+  saveStore(store);
+
+  res.json({
+    success: true,
+    message:
+      "Malipo yamepokelewa. Subiri Admin athibitishe.",
+    payment
+  });
+});
+
+// ===============================
+// CHECK PAYMENT
+// ===============================
+app.get("/api/payment/:reference", (req, res) => {
+  const store = loadStore();
+
+  const reference = req.params.reference;
+
+  const payment = store.payments.find(
+    item =>
+      item.reference.toLowerCase() ===
+      reference.toLowerCase()
+  );
+
+  if (!payment) {
+    return res.status(404).json({
+      success: false,
+      message: "Payment Reference haijapatikana."
+    });
+  }
+
+  res.json({
+    success: true,
+    payment
+  });
+});
+
+// ===============================
+// VIP ACCESS
+// ===============================
+app.get("/api/vip/:reference", (req, res) => {
+  const store = loadStore();
+
+  const reference = req.params.reference;
+
+  const payment = store.payments.find(
+    item =>
+      item.reference.toLowerCase() ===
+      reference.toLowerCase()
+  );
+
+  if (!payment) {
+    return res.status(404).json({
+      success: false,
+      unlocked: false,
+      message: "Payment Reference haijapatikana."
+    });
+  }
+
+  if (payment.status !== "approved") {
+    return res.json({
+      success: true,
+      unlocked: false,
+      status: payment.status,
+      message:
+        "Malipo bado hayajaidhinishwa na Admin."
+    });
+  }
+
+  res.json({
+    success: true,
+    unlocked: true,
+    message: "VIP imefunguliwa.",
+    odds: store.odds
+  });
+});
+
+// ===============================
+// ADMIN AUTHENTICATION
+// ===============================
+function adminAuth(req, res, next) {
+  const password = req.headers["x-admin-password"];
+
+  if (!password || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({
+      success: false,
+      message: "Password ya Admin si sahihi."
+    });
+  }
+
+  next();
+}
+
+// ===============================
+// ADMIN - VIEW PAYMENTS
+// ===============================
+app.get(
+  "/api/admin/payments",
+  adminAuth,
+  (req, res) => {
+    const store = loadStore();
+
+    res.json({
+      success: true,
+      payments: store.payments
+    });
+  }
+);
+
+// ===============================
+// ADMIN - APPROVE PAYMENT
+// ===============================
+app.post(
+  "/api/admin/payments/:id/approve",
+  adminAuth,
+  (req, res) => {
+    const store = loadStore();
+
+    const id = Number(req.params.id);
+
+    const payment = store.payments.find(
+      item => item.id === id
+    );
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Malipo hayajapatikana."
+      });
+    }
+
+    payment.status = "approved";
+    payment.approvedAt = new Date().toISOString();
+
+    saveStore(store);
+
+    res.json({
+      success: true,
+      message: "Malipo yameidhinishwa.",
+      payment
+    });
+  }
+);
+
+// ===============================
+// ADMIN - REJECT PAYMENT
+// ===============================
+app.post(
+  "/api/admin/payments/:id/reject",
+  adminAuth,
+  (req, res) => {
+    const store = loadStore();
+
+    const id = Number(req.params.id);
+
+    const payment = store.payments.find(
+      item => item.id === id
+    );
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Malipo hayajapatikana."
+      });
+    }
+
+    payment.status = "rejected";
+    payment.rejectedAt = new Date().toISOString();
+
+    saveStore(store);
+
+    res.json({
+      success: true,
+      message: "Malipo yamekataliwa.",
+      payment
+    });
+  }
+);
+
+// ===============================
+// ADMIN - ADD ODDS
+// ===============================
+app.post(
+  "/api/admin/odds",
+  adminAuth,
+  (req, res) => {
+    const {
+      title,
+      match,
+      prediction,
+      odd
+    } = req.body;
+
+    if (
+      !title ||
+      !match ||
+      !prediction ||
+      !odd
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Jaza taarifa zote za odds."
+      });
+    }
+
+    const store = loadStore();
+
+    const newOdd = {
+      id: Date.now(),
+      title: title.trim(),
+      match: match.trim(),
+      prediction: prediction.trim(),
+      odd: odd,
+      createdAt: new Date().toISOString()
+    };
+
+    store.odds.unshift(newOdd);
+
+    saveStore(store);
+
+    res.json({
+      success: true,
+      message: "Odds imeongezwa.",
+      odd: newOdd
+    });
+  }
+);
+
+// ===============================
+// ADMIN - VIEW ODDS
+// ===============================
+app.get(
+  "/api/admin/odds",
+  adminAuth,
+  (req, res) => {
+    const store = loadStore();
+
+    res.json({
+      success: true,
+      odds: store.odds
+    });
+  }
+);
+
+// ===============================
+// START SERVER
+// ===============================
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(
+    `YUSUPHU ODDS VIP server running on port ${PORT}`
+  );
+});
