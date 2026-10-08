@@ -105,9 +105,26 @@ app.get("/api/odds", function (req, res) {
   res.json(odds);
 });
 
-// PAYMENT
-app.post("/api/payment", function (req, res) {
+
+ 
+
+  app.post("/api/payment", function (req, res) {
   const reference = String(req.body.reference || "").trim();
+  const method = String(req.body.method || "").trim();
+
+  if (!method) {
+    return res.status(400).json({
+      success: false,
+      message: "Chagua mtandao wa malipo."
+    });
+  }
+
+  if (!PAYMENT_NUMBERS[method]) {
+    return res.status(400).json({
+      success: false,
+      message: "Mtandao wa malipo sio sahihi."
+    });
+  }
 
   if (!reference) {
     return res.status(400).json({
@@ -133,8 +150,9 @@ app.post("/api/payment", function (req, res) {
   const payment = {
     id: Date.now(),
     reference: reference,
+    method: method,
     amount: VIP_PRICE,
-    phone: PAYMENT_NUMBER,
+    phone: PAYMENT_NUMBERS[method],
     status: "PENDING",
     createdAt: new Date().toISOString()
   };
@@ -148,6 +166,16 @@ app.post("/api/payment", function (req, res) {
     payment: payment
   });
 });
+    
+      
+      
+   
+  
+
+    
+    
+  
+
 
 // PAYMENT STATUS
 app.get(
