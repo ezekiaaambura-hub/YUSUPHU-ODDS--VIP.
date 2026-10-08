@@ -875,59 +875,34 @@ app.post("/api/payment", (req, res) => {
   const { reference, method } = req.body;
 
   if (!reference) {
-if (!method) {
-  return res.status(400).json({
-    success: false,
-    message: "Chagua njia ya malipo."
-  });
-}
     return res.status(400).json({
       success: false,
       message: "Weka Payment Reference."
     });
-
   }
 
+  if (!method) {
+    return res.status(400).json({
+      success: false,
+      message: "Chagua njia ya malipo."
+    });
+  }
 
-
-    payments.unshift({
-  id: Date.now(),
-  reference: reference,
-  amount: PAYMENT_AMOUNT,
-  phone: PAYMENT_NUMBER,
-  method: method,
-  status: "PENDING"
-});
-
-    
-
-    
-
-    
-
-
+  payments.unshift({
+    id: Date.now(),
+    reference: reference,
+    amount: PAYMENT_AMOUNT,
+    phone: PAYMENT_NUMBER,
+    method: method,
+    status: "PENDING"
   });
 
   res.json({
-
     success: true,
-
-    message: "Malipo yamepokelewa."
-
+    message: "Malipo yamepokelewa. Subiri Admin athibitishe."
   });
 
 });
-
-
-// ===============================
-// ADMIN PAYMENTS
-// ===============================
-app.get(
-  "/api/payments",
-  requireAdmin,
-  (req, res) => {
-
-    res.json(payments);
 
   }
 );
