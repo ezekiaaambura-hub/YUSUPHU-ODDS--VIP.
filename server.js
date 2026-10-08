@@ -9,9 +9,9 @@ const PORT = process.env.PORT || 10000;
 const PAYMENT_NUMBER = "0793401886";
 const PAYMENT_AMOUNT = 5000;
 
-// Weka password yako ya Admin hapa"Yusuphu2026"
-const ADMIN_PASSWORD = "WEKA_PASSWORD_YAKO_HAPA";
-,Maritaezekia,1
+// Weka password yako ya Admin hapa
+const ADMIN_PASSWORD = "Yusuphu2026";
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
