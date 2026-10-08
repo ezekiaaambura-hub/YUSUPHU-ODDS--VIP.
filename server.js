@@ -224,9 +224,15 @@ LIPA TSh 5,000
 
 <h1>TSh 5,000</h1>
 
-<p>Namba ya malipo:</p>
 
-<h2>📱 0793401886</h2>
+
+<p>Namba za malipo:</p>
+
+<h3>📱 M-Pesa: 0793401886</h3>
+<h3>📱 Airtel Money: 0692359311</h3>
+<h3>📱 HaloPesa: 0613431930</h3>
+
+<p>Lipa TSh 5,000, kisha bonyeza <strong>NIMEFANYA MALIPO</strong> na weka Payment Reference yako.</p>
 
 <p>
 Baada ya kufanya malipo, weka namba ya kumbukumbu hapa chini.
