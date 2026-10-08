@@ -736,7 +736,7 @@ app.post("/api/admin/login", (req, res) => {
   const { password } = req.body;
 
   if (password !== ADMIN_PASSWORD) {
-,Maritaezekia,11
+
     return res.status(401).json({
       success: false,
       message: "Password sio sahihi."
