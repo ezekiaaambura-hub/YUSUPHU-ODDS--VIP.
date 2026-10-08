@@ -12,7 +12,7 @@ app.use(express.static(__dirname));
 
 const ADMIN_PASSWORD =
   process.env.ADMIN_PASSWORD || "BADILISHA_PASSWORD_HAPA";
-
+Yusuphu2026
 const PAYMENT_NUMBERS = {
   "M-Pesa": "0793401886",
   "Airtel Money": "0692359311",
@@ -20,7 +20,6 @@ const PAYMENT_NUMBERS = {
 };
 
 const VIP_PRICE = 5000;
-
 
 let odds = [
   {
@@ -105,10 +104,8 @@ app.get("/api/odds", function (req, res) {
   res.json(odds);
 });
 
-
- 
-
-  app.post("/api/payment", function (req, res) {
+// PAYMENT);
+app.post("/api/payment", function (req, res) {
   const reference = String(req.body.reference || "").trim();
   const method = String(req.body.method || "").trim();
 
@@ -166,17 +163,6 @@ app.get("/api/odds", function (req, res) {
     payment: payment
   });
 });
-    
-      
-      
-   
-  
-
-    
-    
-  
-
-
 // PAYMENT STATUS
 app.get(
   "/api/payment-status/:reference",
