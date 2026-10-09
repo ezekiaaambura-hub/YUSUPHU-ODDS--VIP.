@@ -12,14 +12,15 @@ app.use(express.static(__dirname));
 
 const ADMIN_PASSWORD =
   process.env.ADMIN_PASSWORD || "BADILISHA_PASSWORD_HAPA";
-Yusuphu2026
-const PAYMENT_NUMBERS = {
+ const PAYMENT_NUMBERS = {
   "M-Pesa": "0793401886",
   "Airtel Money": "0692359311",
-  "HaloPesa": "0613431930"
+  "HaloPesa": "0613441930"
 };
 
+const PAYMENT_NUMBER = PAYMENT_NUMBERS["M-Pesa"];
 const VIP_PRICE = 5000;
+
 
 let odds = [
   {
@@ -95,33 +96,25 @@ app.get("/api/config", function (req, res) {
   res.json({
     success: true,
     price: VIP_PRICE,
-    paymentNumber: PAYMENT_NUMBER
+    paymentNumber: PAYMENT_NUMBER,
+    paymentNumbers: PAYMENT_NUMBERS
   });
 });
+  
+    
+    
+    
+  
+
 
 // GET ODDS
 app.get("/api/odds", function (req, res) {
   res.json(odds);
 });
 
-// PAYMENT);
+// PAYMENT
 app.post("/api/payment", function (req, res) {
   const reference = String(req.body.reference || "").trim();
-  const method = String(req.body.method || "").trim();
-
-  if (!method) {
-    return res.status(400).json({
-      success: false,
-      message: "Chagua mtandao wa malipo."
-    });
-  }
-
-  if (!PAYMENT_NUMBERS[method]) {
-    return res.status(400).json({
-      success: false,
-      message: "Mtandao wa malipo sio sahihi."
-    });
-  }
 
   if (!reference) {
     return res.status(400).json({
@@ -147,9 +140,8 @@ app.post("/api/payment", function (req, res) {
   const payment = {
     id: Date.now(),
     reference: reference,
-    method: method,
     amount: VIP_PRICE,
-    phone: PAYMENT_NUMBERS[method],
+    phone: PAYMENT_NUMBER,
     status: "PENDING",
     createdAt: new Date().toISOString()
   };
@@ -163,6 +155,7 @@ app.post("/api/payment", function (req, res) {
     payment: payment
   });
 });
+
 // PAYMENT STATUS
 app.get(
   "/api/payment-status/:reference",
