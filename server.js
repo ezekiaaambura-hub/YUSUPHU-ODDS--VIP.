@@ -11,10 +11,17 @@ app.use(express.urlencoded({ extended: true }));
 // ===============================
 
 const ADMIN_PASSWORD =
-  process.env.ADMIN_PASSWORD || "BADILISHA_PASSWORD_HAPA";
+  process.env.ADMIN_PASSWORD ||Yusuphu2026
 
-const PAYMENT_NUMBER = "0793401886";
+const PAYMENT_NUMBERS = {
+  "M-Pesa": "0793401886",
+  "Airtel Money": "0692359311",
+  "HaloPesa": "0613441930"
+};
+
+const PAYMENT_NUMBER = PAYMENT_NUMBERS["M-Pesa"];
 const VIP_PRICE = 5000;
+
 
 // ===============================
 // DATA
