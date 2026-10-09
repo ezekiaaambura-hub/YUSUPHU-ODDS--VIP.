@@ -1,547 +1,719 @@
+
 <!DOCTYPE html>
 <html lang="sw">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="theme-color" content="#071426">
   <title>YUSUPHU ODDS VIP</title>
 
-  <link rel="stylesheet" href="/style.css">
+  <style>
+    :root {
+      --bg: #071426;
+      --panel: #10243c;
+      --gold: #f4c542;
+      --text: #ffffff;
+      --muted: #c2cede;
+      --green: #19b878;
+      --red: #e85b62;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    header {
+      text-align: center;
+      padding: 25px 15px;
+      background: #0c1d32;
+      border-bottom: 2px solid var(--gold);
+    }
+
+    .logo {
+      font-size: 42px;
+      margin-bottom: 5px;
+    }
+
+    header h1 {
+      color: var(--gold);
+      margin: 0;
+      font-size: 25px;
+    }
+
+    header p { color: var(--muted); }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: #0a192b;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    button, .nav-button {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 15px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    nav button {
+      background: #1a3451;
+      color: white;
+    }
+
+    nav button:hover { background: #294c70; }
+
+    main {
+      width: 100%;
+      max-width: 850px;
+      margin: auto;
+      padding: 16px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .section-title {
+      color: var(--gold);
+      font-size: 23px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid #29425e;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    h2, h3 { margin-top: 0; }
+
+    .amount {
+      color: var(--gold);
+      font-size: 32px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .phone-number {
+      background: #071426;
+      border: 1px solid #3a5270;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 8px 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 5px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 13px;
+      background: #071426;
+      color: white;
+      border: 1px solid #49617c;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .primary {
+      background: var(--gold);
+      color: #101010;
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    .success { color: #6af0ad; }
+    .error { color: #ff9297; }
+    .muted { color: var(--muted); }
+
+    .message {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    .odds-item, .payment-item {
+      padding: 13px;
+      margin: 10px 0;
+      background: #071426;
+      border-radius: 8px;
+      border: 1px solid #29425e;
+    }
+
+    .small-button {
+      padding: 8px 12px;
+      margin: 5px 5px 0 0;
+      background: #284665;
+      color: white;
+    }
+
+    .danger { background: #9d3038; color: white; }
+
+    footer {
+      text-align: center;
+      padding: 25px 12px;
+      color: var(--muted);
+      border-top: 1px solid #29425e;
+    }
+  </style>
 </head>
 
 <body>
-
-  <!-- HEADER -->
-  <header class="hero">
-
-    <div class="hero-title">
-      <span class="football">⚽</span>
-      <span>YUSUPHU ODDS VIP</span>
-    </div>
-
-    <p>
-      Free Odds • VIP TSh 5,000 • Bet Slip Calculator
-    </p>
-
+  <header>
+    <div class="logo">⚽</div>
+    <h1>YUSUPHU ODDS VIP</h1>
+    <p>Karibu YUSUPHU ODDS VIP — karibu kwenye huduma yetu.</p>
   </header>
 
-
-  <!-- NAVIGATION -->
-  <nav class="navigation">
-
-    <button onclick="showPage('home')">
-      🏠 HOME
-    </button>
-
-    <button onclick="showPage('free')">
-      🆓 FREE ODDS
-    </button>
-
-    <button onclick="showPage('vip')">
-      ⭐ VIP ODDS
-    </button>
-
-    <button onclick="showPage('mkeka')">
-      🎟️ MKEKA
-    </button>
-
-    <button onclick="showPage('payment')">
-      💳 LIPA 5,000
-    </button>
-
-    <button onclick="showPage('admin')">
-      👤 ADMIN
-    </button>
-
+  <nav>
+    <button type="button" onclick="showPage('home')">HOME</button>
+    <button type="button" onclick="showPage('payment')">MALIPO</button>
+    <button type="button" onclick="showPage('vip')">VIP ODDS</button>
+    <button type="button" onclick="showPage('admin')">ADMIN</button>
   </nav>
 
-
   <main>
-
-
     <!-- HOME -->
     <section id="home" class="page active">
-
-      <div class="card vip-card">
-
-        <div class="green-title">
-          VIP FOOTBALL PREDICTIONS
-        </div>
-
-        <h1>
-          Karibu<br>
-          YUSUPHU ODDS VIP
-        </h1>
-
-        <p>
-          Jiunge na huduma ya VIP Odds kwa
-          <strong>TSh 5,000.</strong>
-        </p>
-
-        <button class="green-button"
-                onclick="showPage('payment')">
-          💳 LIPA TSh 5,000
-        </button>
-
-      </div>
-
+      <div class="section-title">🏠 KARIBU</div>
 
       <div class="card">
-
-        <h2>💳 JINSI YA KULIPA</h2>
-
+        <h2>YUSUPHU ODDS VIP</h2>
         <p>
-          Lipa TSh 5,000 kwenda kwenye namba:
+          Karibu kwenye jukwaa la YUSUPHU ODDS VIP.
+          Fuata maelekezo ya malipo na subiri uthibitisho
+          kabla ya kupata huduma za VIP.
         </p>
 
-        <div class="phone-number">
-          📱 0793401886
-        </div>
+        <div class="amount">TSh 5,000</div>
+        <p class="muted">Ada ya kujiunga na VIP.</p>
 
-        <p>
-          Baada ya kufanya malipo, utapokea
-          <strong>Reference/Transaction ID</strong>
-          kupitia SMS.
-        </p>
-
-        <button class="green-button"
-                onclick="showPage('payment')">
-          💳 NIMEFANYA MALIPO
+        <button class="primary" type="button"
+          onclick="showPage('payment')">
+          ENDELEA KWENYE MALIPO
         </button>
-
       </div>
-
-
-      <div class="card">
-
-        <h2>🎁 ODDS ZA KWANZA BURE</h2>
-
-        <p>
-          Kabla hujalipia VIP, unaweza kuona
-          odds za kwanza bure.
-        </p>
-
-        <button class="blue-button"
-                onclick="showPage('free')">
-          ANGALIA FREE ODDS
-        </button>
-
-      </div>
-
-
-      <div class="warning">
-
-        <span class="warning-icon">🔞</span>
-
-        <span>
-          <strong>18+</strong> • Usibeti zaidi ya uwezo wako.
-          Mfumo huu hautoi bet moja kwa moja kwa kampuni za betting.
-        </span>
-
-      </div>
-
     </section>
-
-
-
-    <!-- FREE ODDS -->
-    <section id="free" class="page">
-
-      <div class="section-title">
-        🆓 FREE ODDS
-      </div>
-
-      <div id="freeOddsList">
-
-        <div class="card">
-          <h2>Free Odds</h2>
-          <p>
-            Odds za bure zitaonekana hapa.
-          </p>
-        </div>
-
-      </div>
-
-    </section>
-
-
-
-    <!-- VIP ODDS -->
-    <section id="vip" class="page">
-
-      <div class="section-title">
-        ⭐ VIP ODDS
-      </div>
-
-      <div class="card">
-
-        <h2>🔐 VIP ODDS</h2>
-
-        <p>
-          VIP Odds zinapatikana baada ya
-          kuthibitisha malipo ya TSh 5,000.
-        </p>
-
-        <button class="green-button"
-                onclick="showPage('payment')">
-          💳 LIPA TSh 5,000
-        </button>
-
-      </div>
-
-      <div id="vipOddsList"></div>
-
-    </section>
-
-
-
-    <!-- MKEKA -->
-    <section id="mkeka" class="page">
-
-      <div class="section-title">
-        🎟️ MKEKA
-      </div>
-
-      <div class="card">
-
-        <h2>🎟️ BET SLIP</h2>
-
-        <p>
-          Chagua odds zako na tengeneza mkeka wako.
-        </p>
-
-        <div class="bet-slip">
-
-          <div class="bet-row">
-            Arsenal vs Chelsea
-            <strong>1.85</strong>
-          </div>
-
-          <div class="bet-row">
-            Barcelona vs Sevilla
-            <strong>1.60</strong>
-          </div>
-
-          <div class="bet-row">
-            Real Madrid vs Valencia
-            <strong>1.75</strong>
-          </div>
-
-        </div>
-
-        <div class="total-odds">
-          Total Odds:
-          <strong>5.18</strong>
-        </div>
-
-      </div>
-
-    </section>
-
-
 
     <!-- PAYMENT -->
     <section id="payment" class="page">
-
-      <div class="section-title">
-        💳 LIPA TSh 5,000
-      </div>
+      <div class="section-title">💳 LIPA TSh 5,000</div>
 
       <div class="card">
+        <h2>JINSI YA KULIPA</h2>
 
-        <h2>💳 JINSI YA KULIPA</h2>
+        <p>Lipa kiasi cha:</p>
+        <div class="amount">TSh 5,000</div>
 
-        <p>
-          Lipa kiasi cha:
-        </p>
+        <p>Chagua njia unayotumia, kisha tuma malipo kwenye namba husika.</p>
 
-        <div class="amount">
-          TSh 5,000
+        <label for="paymentMethod">Njia ya malipo</label>
+        <select id="paymentMethod" onchange="showPaymentNumber()">
+          <option value="">-- Chagua njia ya malipo --</option>
+          <option value="M-Pesa">M-Pesa</option>
+          <option value="Airtel Money">Airtel Money</option>
+          <option value="HaloPesa">HaloPesa</option>
+        </select>
+
+        <div id="paymentNumberBox" class="phone-number">
+          Chagua njia ya malipo ili kuona namba.
         </div>
 
-        <p>
-          Tuma malipo kwenda:
+        <p class="muted">
+          Hakikisha umetuma TSh 5,000. Usitume fedha mara mbili
+          kwa sababu ya kuchelewa kwa ujumbe.
         </p>
-
-        <div class="phone-number">
-          📱 0793401886
-        </div>
 
         <hr>
 
-        <h3>
-          🧾 Payment Reference
-        </h3>
-
+        <h3>🧾 Payment Reference</h3>
         <p>
-          Baada ya kulipa, angalia SMS yako
-          na tafuta <strong>Reference/Transaction ID</strong>.
+          Payment Reference ni namba au kumbukumbu ya muamala
+          uliyopewa baada ya kufanya malipo. Weka kumbukumbu
+          halisi kutoka kwenye ujumbe wa muamala.
         </p>
 
-        <input
-          type="text"
-          id="paymentReference"
-          placeholder="Weka Payment Reference">
+        <form id="paymentForm">
+          <label for="paymentReference">Payment Reference</label>
+          <input
+            id="paymentReference"
+            name="reference"
+            type="text"
+            placeholder="Weka kumbukumbu ya muamala"
+            autocomplete="off"
+            required
+          >
 
-        <button class="green-button"
-                onclick="submitPayment()">
-          ✅ NIMEFANYA MALIPO
-        </button>
+          <button class="primary" type="submit">
+            NIMEFANYA MALIPO
+          </button>
+        </form>
 
-        <div id="paymentMessage"></div>
-
+        <div id="paymentMessage" class="message" aria-live="polite"></div>
       </div>
-
     </section>
 
+    <!-- VIP -->
+    <section id="vip" class="page">
+      <div class="section-title">⭐ VIP ODDS</div>
 
+      <div class="card">
+        <h2>Odds za VIP</h2>
+        <p class="muted">
+          Odds zinazoonekana hapa hupakiwa kutoka kwenye server.
+          Hakikisha huduma yako ya VIP imethibitishwa na Admin.
+        </p>
+
+        <button class="primary" type="button" onclick="loadOdds()">
+          PAKIA ODDS
+        </button>
+
+        <div id="oddsMessage" class="message" aria-live="polite"></div>
+        <div id="oddsList"></div>
+      </div>
+    </section>
 
     <!-- ADMIN -->
     <section id="admin" class="page">
-
-      <div class="section-title">
-        👤 ADMIN
-      </div>
+      <div class="section-title">👤 ADMIN PANEL</div>
 
       <div class="card">
-
-        <h2>🔐 Admin Panel</h2>
-
-        <p>
-          Sehemu hii ni kwa ajili ya kusimamia
-          Free Odds, VIP Odds na malipo.
+        <h2>🔐 Ingia Admin</h2>
+        <p class="muted">
+          Tumia password ya Admin iliyowekwa kwenye server.
+          Usimpe mtu mwingine password yako.
         </p>
 
-        <input
-          type="password"
-          id="adminPassword"
-          placeholder="Admin Password">
+        <form id="adminLoginForm">
+          <label for="adminPassword">Password ya Admin</label>
+          <input
+            id="adminPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+          >
+          <button class="primary" type="submit">INGIA ADMIN</button>
+        </form>
 
-        <button class="blue-button"
-                onclick="adminLogin()">
-          🔐 INGIA ADMIN
-        </button>
-
-        <div id="adminMessage"></div>
-
+        <div id="adminMessage" class="message" aria-live="polite"></div>
       </div>
 
+      <div id="adminDashboard" hidden>
+        <div class="card">
+          <h2>➕ Ongeza Odds</h2>
+
+          <form id="oddsForm">
+            <label for="match">Mechi</label>
+            <input id="match" required placeholder="Mfano: Team A vs Team B">
+
+            <label for="prediction">Utabiri</label>
+            <input id="prediction" required placeholder="Mfano: 1X">
+
+            <label for="oddValue">Odd</label>
+            <input id="oddValue" type="number" min="1" step="0.01"
+              required placeholder="Mfano: 1.85">
+
+            <button class="primary" type="submit">ONGEZA ODDS</button>
+          </form>
+
+          <div id="addOddsMessage" class="message" aria-live="polite"></div>
+        </div>
+
+        <div class="card">
+          <h2>📋 Orodha ya Odds</h2>
+          <button type="button" class="small-button" onclick="loadAdminOdds()">
+            ONYESHA ODDS
+          </button>
+          <div id="adminOddsList"></div>
+        </div>
+
+        <div class="card">
+          <h2>💳 Maombi ya Malipo</h2>
+          <p class="muted">
+            Maombi yanayoonekana hapa bado hayamaanishi kuwa
+            fedha zimeingia. Hakiki muamala kwenye akaunti ya
+            biashara kabla ya kuthibitisha mteja.
+          </p>
+
+          <button type="button" class="small-button" onclick="loadPayments()">
+            ANGALIA MALIPO
+          </button>
+
+          <div id="paymentsList"></div>
+        </div>
+
+        <button type="button" class="danger" onclick="adminLogout()">
+          TOKA ADMIN
+        </button>
+      </div>
     </section>
-
-
   </main>
 
-
-  <!-- FOOTER -->
   <footer>
-
-    <strong>YUSUPHU ODDS VIP</strong>
-
-    <p>
-      © 2026 • Football Predictions
-    </p>
-
-    <p>
-      🔞 18+ Bet Responsibly
-    </p>
-
+    <p>© YUSUPHU ODDS VIP</p>
+    <p>Cheza kwa uwajibikaji. Hakuna utabiri unaohakikisha ushindi.</p>
   </footer>
 
+  <script>
+    // Namba za malipo
+    const PAYMENT_NUMBERS = {
+      "M-Pesa": "0793401886",
+      "Airtel Money": "0692359311",
+      "HaloPesa": "0613431930"
+    };
 
+    const VIP_PRICE = 5000;
+    let adminPassword = "";
 
-<script>
-
-  // KUONESHA PAGE
-  function showPage(page) {
-
-    document.querySelectorAll(".page").forEach(function(section) {
-
-      section.classList.remove("active");
-
-    });
-
-    const selected = document.getElementById(page);
-
-    if (selected) {
-
-      selected.classList.add("active");
-
-    }
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-
-    if (page === "free") {
-      loadOdds();
-    }
-
-    if (page === "vip") {
-      loadOdds();
-    }
-
-  }
-
-
-
-  // KUPATA ODDS KUTOKA SERVER
-  async function loadOdds() {
-
-    try {
-
-      const response = await fetch("/api/odds");
-
-      if (!response.ok) {
-        throw new Error("Server error");
-      }
-
-      const odds = await response.json();
-
-      const freeList =
-        document.getElementById("freeOddsList");
-
-      const vipList =
-        document.getElementById("vipOddsList");
-
-
-      if (!odds || odds.length === 0) {
-
-        freeList.innerHTML = `
-          <div class="card">
-            <h2>Hakuna odds kwa sasa</h2>
-            <p>Admin hajaongeza odds bado.</p>
-          </div>
-        `;
-
-        vipList.innerHTML = "";
-
-        return;
-
-      }
-
-
-      let html = "";
-
-      odds.forEach(function(item) {
-
-        html += `
-
-          <div class="odd-card">
-
-            <div>
-              <strong>${escapeHtml(item.match)}</strong>
-            </div>
-
-            <div class="pick">
-              ${escapeHtml(item.pick)}
-            </div>
-
-            <div class="odd-number">
-              ${Number(item.odd).toFixed(2)}
-            </div>
-
-          </div>
-
-        `;
-
+    function showPage(pageId) {
+      document.querySelectorAll(".page").forEach(page => {
+        page.classList.remove("active");
       });
 
+      const page = document.getElementById(pageId);
+      if (page) page.classList.add("active");
 
-      freeList.innerHTML = html;
-
-      vipList.innerHTML = html;
-
+      if (pageId === "vip") loadOdds();
     }
 
-    catch (error) {
-
-      console.log(error);
-
+    function showMessage(id, message, type = "") {
+      const box = document.getElementById(id);
+      box.textContent = message;
+      box.className = "message " + type;
     }
 
-  }
+    function showPaymentNumber() {
+      const method = document.getElementById("paymentMethod").value;
+      const box = document.getElementById("paymentNumberBox");
 
+      if (!method || !PAYMENT_NUMBERS[method]) {
+        box.textContent = "Chagua njia ya malipo ili kuona namba.";
+        return;
+      }
 
-
-  // PAYMENT
-  async function submitPayment() {
-
-    const reference =
-      document.getElementById("paymentReference").value.trim();
-
-    const message =
-      document.getElementById("paymentMessage");
-
-
-    if (!reference) {
-
-      message.innerHTML =
-        "<p class='error'>Tafadhali weka Payment Reference.</p>";
-
-      return;
-
+      box.textContent = method + ": " + PAYMENT_NUMBERS[method];
     }
 
+    async function readResponse(response) {
+      const text = await response.text();
 
-    message.innerHTML =
-      "<p class='success'>Payment Reference imepokelewa.</p>";
-
-  }
-
-
-
-  // ADMIN
-  function adminLogin() {
-
-    const password =
-      document.getElementById("adminPassword").value;
-
-    const message =
-      document.getElementById("adminMessage");
-
-
-    if (!password) {
-
-      message.innerHTML =
-        "<p class='error'>Weka Admin Password.</p>";
-
-      return;
-
+      try {
+        return text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error("Server imerudisha majibu yasiyo sahihi.");
+      }
     }
 
+    // Kutuma ombi la malipo
+    document.getElementById("paymentForm").addEventListener("submit", async event => {
+      event.preventDefault();
 
-    message.innerHTML =
-      "<p class='success'>Taarifa imetumwa kwa Admin.</p>";
+      const method = document.getElementById("paymentMethod").value;
+      const reference = document.getElementById("paymentReference").value.trim();
 
-  }
+      if (!method || !PAYMENT_NUMBERS[method]) {
+        showMessage("paymentMessage", "Chagua M-Pesa, Airtel Money au HaloPesa.", "error");
+        return;
+      }
 
+      if (!reference) {
+        showMessage("paymentMessage", "Weka Payment Reference.", "error");
+        return;
+      }
 
+      const button = event.submitter;
+      if (button) button.disabled = true;
 
-  // SECURITY YA TEXT
-  function escapeHtml(value) {
+      showMessage("paymentMessage", "Inatuma ombi la malipo...");
 
-    return String(value).replace(/[&<>"']/g, function(character) {
+      try {
+        const response = await fetch("/api/payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reference, method })
+        });
 
-      return {
+        const data = await readResponse(response);
 
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
+        if (!response.ok || data.success === false) {
+          throw new Error(data.message || "Ombi la malipo halijafanikiwa.");
+        }
 
-      }[character];
-
+        showMessage(
+          "paymentMessage",
+          data.message || "Ombi limepokelewa. Subiri uthibitisho wa Admin.",
+          "success"
+        );
+      } catch (error) {
+        showMessage(
+          "paymentMessage",
+          error.message || "Imeshindikana kuwasiliana na server.",
+          "error"
+        );
+      } finally {
+        if (button) button.disabled = false;
+      }
     });
 
-  }
+    // Kupakia odds kwa wateja
+    async function loadOdds() {
+      const list = document.getElementById("oddsList");
+      showMessage("oddsMessage", "Inapakia odds...");
+      list.replaceChildren();
 
+      try {
+        const response = await fetch("/api/odds");
+        const data = await readResponse(response);
 
-  // ANZA HOME
-  showPage("home");
+        if (!response.ok) {
+          throw new Error(data.message || "Imeshindikana kupakia odds.");
+        }
 
-</script>
+        const odds = Array.isArray(data) ? data : (data.odds || []);
 
+        if (!odds.length) {
+          showMessage("oddsMessage", "Bado hakuna odds zilizowekwa.");
+          return;
+        }
+
+        showMessage("oddsMessage", "Odds zimepakiwa.", "success");
+
+        odds.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "odds-item";
+
+          const match = document.createElement("strong");
+          match.textContent = item.match || item.fixture || "Mechi";
+
+          const details = document.createElement("p");
+          details.textContent =
+            "Utabiri: " + (item.prediction || item.pick || item.tip || "-") +
+            " | Odd: " + (item.odd ?? item.odds ?? "-");
+
+          card.append(match, details);
+          list.appendChild(card);
+        });
+      } catch (error) {
+        showMessage("oddsMessage", error.message, "error");
+      }
+    }
+
+    // Admin login: hutegemea requireAdmin ya server kukubali
+    // header X-Admin-Password.
+    document.getElementById("adminLoginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const entered = document.getElementById("adminPassword").value;
+      const message = document.getElementById("adminMessage");
+
+      showMessage("adminMessage", "Inathibitisha password...");
+
+      try {
+        const response = await fetch("/api/payments", {
+          headers: { "X-Admin-Password": entered }
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Password imekataliwa au huna ruhusa ya Admin.");
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            "Server haijakubali ombi. Hakikisha route ya /api/payments ipo."
+          );
+        }
+
+        await readResponse(response);
+
+        adminPassword = entered;
+        document.getElementById("adminDashboard").hidden = false;
+        document.getElementById("adminPassword").value = "";
+
+        showMessage("adminMessage", "Umeingia Admin.", "success");
+
+        loadAdminOdds();
+        loadPayments();
+      } catch (error) {
+        showMessage("adminMessage", error.message, "error");
+      }
+    });
+
+    function adminHeaders(json = false) {
+      const headers = { "X-Admin-Password": adminPassword };
+      if (json) headers["Content-Type"] = "application/json";
+      return headers;
+    }
+
+    async function loadAdminOdds() {
+      const list = document.getElementById("adminOddsList");
+      list.replaceChildren();
+
+      try {
+        const response = await fetch("/api/odds", {
+          headers: adminHeaders()
+        });
+        const data = await readResponse(response);
+
+        if (!response.ok) {
+          throw new Error(data.message || "Imeshindikana kupakia odds.");
+        }
+
+        const odds = Array.isArray(data) ? data : (data.odds || []);
+
+        odds.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "odds-item";
+
+          const title = document.createElement("strong");
+          title.textContent = item.match || item.fixture || "Mechi";
+
+          const details = document.createElement("p");
+          details.textContent =
+            "Utabiri: " + (item.prediction || item.pick || item.tip || "-") +
+            " | Odd: " + (item.odd ?? item.odds ?? "-");
+
+          card.append(title, details);
+
+          if (item.id !== undefined) {
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "small-button danger";
+            remove.textContent = "FUTA ODDS";
+
+            remove.addEventListener("click", async () => {
+              if (!confirm("Una uhakika unataka kufuta odds hii?")) return;
+
+              try {
+                const result = await fetch(
+                  "/api/odds/" + encodeURIComponent(item.id),
+                  { method: "DELETE", headers: adminHeaders() }
+                );
+
+                const resultData = await readResponse(result);
+
+                if (!result.ok) {
+                  throw new Error(resultData.message || "Imeshindikana kufuta odds.");
+                }
+
+                loadAdminOdds();
+              } catch (error) {
+                alert(error.message);
+              }
+            });
+
+            card.appendChild(remove);
+          }
+
+          list.appendChild(card);
+        });
+
+        if (!odds.length) list.textContent = "Bado hakuna odds.";
+      } catch (error) {
+        list.textContent = error.message;
+      }
+    }
+
+    document.getElementById("oddsForm").addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const payload = {
+        match: document.getElementById("match").value.trim(),
+        prediction: document.getElementById("prediction").value.trim(),
+        odd: Number(document.getElementById("oddValue").value)
+      };
+
+      try {
+        const response = await fetch("/api/odds", {
+          method: "POST",
+          headers: adminHeaders(true),
+          body: JSON.stringify(payload)
+        });
+
+        const data = await readResponse(response);
+
+        if (!response.ok || data.success === false) {
+          throw new Error(data.message || "Imeshindikana kuongeza odds.");
+        }
+
+        showMessage("addOddsMessage", "Ombi la kuongeza odds limetumwa.", "success");
+        event.target.reset();
+        loadAdminOdds();
+      } catch (error) {
+        showMessage("addOddsMessage", error.message, "error");
+      }
+    });
+
+    async function loadPayments() {
+      const list = document.getElementById("paymentsList");
+      list.replaceChildren();
+      list.textContent = "Inapakia maombi ya malipo...";
+
+      try {
+        const response = await fetch("/api/payments", {
+          headers: adminHeaders()
+        });
+        const data = await readResponse(response);
+
+        if (!response.ok) {
+          throw new Error(data.message || "Imeshindikana kupakia malipo.");
+        }
+
+        const payments = Array.isArray(data) ? data : (data.payments || []);
+        list.replaceChildren();
+
+        if (!payments.length) {
+          list.textContent = "Hakuna maombi ya malipo yaliyopatikana.";
+          return;
+        }
+
+        payments.forEach(payment => {
+          const card = document.createElement("div");
+          card.className = "payment-item";
+
+          const details = document.createElement("p");
+          details.textContent =
+            "Reference: " + (payment.reference || "-") +
+            " | Njia: " + (payment.method || "-") +
+            " | Kiasi: TSh " + (payment.amount ?? VIP_PRICE) +
+            " | Hali: " + (payment.status || "PENDING");
+
+          card.appendChild(details);
+          list.appendChild(card);
+        });
+      } catch (error) {
+        list.textContent = error.message;
+      }
+    }
+
+    function adminLogout() {
+      adminPassword = "";
+      document.getElementById("adminDashboard").hidden = true;
+      document.getElementById("adminPassword").value = "";
+      showMessage("adminMessage", "Umetoka kwenye Admin.");
+    }
+  </script>
 </body>
-  </html>
+</html>
