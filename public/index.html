@@ -1,11 +1,109 @@
 <title>YUSUPHU ODDS VIP</title>
-
 <style>
-  :root {
+root {
     --bg: #030907;
     --panel: #071b14;
     --gold: #00e676;
     --text: #ffffff;
+  :/* YUSUPHU ODDS VIP - BIG MOBILE DESIGN */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 18px;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100vh;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+header {
+  padding: 28px 16px;
+}
+
+header h1 {
+  font-size: clamp(28px, 7vw, 42px);
+  line-height: 1.25;
+  margin: 10px 0;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+}
+
+nav button,
+button {
+  min-height: 50px;
+  font-size: 17px;
+  padding: 13px 18px;
+  border-radius: 12px;
+}
+
+main,
+.container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+section,
+.card {
+  width: 100%;
+  padding: 22px;
+  margin-bottom: 20px;
+  border-radius: 18px;
+}
+
+.section-title {
+  font-size: 24px;
+  margin-bottom: 18px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px;
+  font-size: 17px;
+  border-radius: 10px;
+}
+
+.amount,
+.phone-number {
+  font-size: 25px;
+  font-weight: 800;
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 17px;
+  }
+
+  main,
+  .container {
+    padding: 12px;
+  }
+
+  section,
+  .card {
+    padding: 18px;
+  }
+
+  header h1 {
+    font-size: 30px;
+  }
+}
     --muted: #b8c9c0;
     --green: #00e676;
     --red: #ff5252;
