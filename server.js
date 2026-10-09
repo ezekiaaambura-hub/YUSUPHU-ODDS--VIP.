@@ -843,56 +843,52 @@ app.delete(
 // ===============================
 // PAYMENT SUBMISSION
 // ===============================
-app.post("/api/payment", (req, res) => {
 
-  const { reference } = req.body;
-
-  if (!reference) {
-
-    return res.status(400).json({
-      success: false,
-      message: "Weka Payment Reference."
-    });
-
-  }
-
-  payments.unshift({
-
-    id: Date.now(),
-
-    reference: reference,
-
-    amount: PAYMENT_AMOUNT,
-
-    phone: PAYMENT_NUMBER,
-
-    status: "PENDING"
-
-  });
-
-  res.json({
-
-    success: true,
-
-    message: "Malipo yamepokelewa."
-
-  });
-
-});
 
 
 // ===============================
 // ADMIN PAYMENTS
 // ===============================
-app.get(
-  "/api/payments",
-  requireAdmin,
-  (req, res) => {
+app.post("/api/payment", (req, res) => {
+  const { reference, method } = req.body;
 
-    res.json(payments);
-
+  if (!reference || !reference.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "Weka Payment Reference."
+    });
   }
-);
+
+  if (!method || !PAYMENT_NUMBERS[method]) {
+    return res.status(400).json({
+      success: false,
+      message: "Chagua njia sahihi ya malipo."
+    });
+  }
+
+  const payment = {
+    id: Date.now(),
+    reference: reference.trim(),
+    method,
+    amount: VIP_PRICE,
+    phone: PAYMENT_NUMBERS[method],
+    status: "PENDING"
+  };
+
+  payments.unshift(payment);
+
+  return res.status(201).json({
+    success: true,
+    message: "Ombi la malipo limepokelewa na linasubiri uthibitisho wa Admin.",
+    payment: {
+      id: payment.id,
+      reference: payment.reference,
+      method: payment.method,
+      amount: payment.amount,
+      status: payment.status
+    }
+  });
+});
 
 
 // ===============================
