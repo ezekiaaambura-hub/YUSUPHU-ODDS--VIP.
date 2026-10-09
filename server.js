@@ -6,10 +6,15 @@ const PORT = process.env.PORT || 10000;
 // ===============================
 // SETTINGS
 // ===============================
-const PAYMENT_NUMBER = "0793401886";
-const PAYMENT_AMOUNT = 5000;
+const PAYMENT_NUMBERS = {
+  "M-Pesa": "0793401886",
+  "Airtel Money": "0692359311",
+  "HaloPesa": "0613431930"
+};
 
-// Weka password yako ya Admin hapa
+const VIP_PRICE = 5000;
+
+// Weka password yako ya Admin hapa Yusuphu2026
 const ADMIN_PASSWORD = "WEKA_PASSWORD_YAKO_HAPA";
 
 app.use(express.json());
