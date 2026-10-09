@@ -571,7 +571,61 @@ textarea {
 button,
 nav button {
   font-size: 18px;
-      } }
+    /* MOBILE FULL SCREEN FIX */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  font-size: 18px;
+}
+
+body {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+header,
+nav,
+main,
+.container,
+section,
+.page {
+  width: 100%;
+  max-width: 100%;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 600px) {
+  body {
+    font-size: 18px;
+  }
+
+  header,
+  main,
+  .container,
+  section,
+  .page {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font-size: 18px;
+    min-height: 48px;
+    } }
 }
 </style>
 
