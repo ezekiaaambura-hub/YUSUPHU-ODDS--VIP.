@@ -115,23 +115,6 @@ app.post("/api/odds", requireAdmin, (req, res) => {
     odd: item
   });
 });
-    req.body.prediction || req.body.pick || ""
-  ).
-
-  const item = {
-    id: nextOddId++,
-    match,
-    prediction,
-    pick: prediction,
-    odd,
-    status: "VIP",
-    createdAt: new Date().toISOString()
-  };
-
-  odds.unshift(item);
-  res.status(201).json({ success: true, odd: item });
-});
-
 // DELETE ODDS — ADMIN
 app.delete("/api/odds/:id", requireAdmin, (req, res) => {
   const id = Number(req.params.id);
