@@ -1240,36 +1240,17 @@ style="display:none">
 </h2>
 
 <input
-id="match"
-placeholder="Mfano: Arsenal vs Chelsea">
+<label for="oddValue">Odd</label>
+<input id="oddValue" type="number" min="1" step="0.01"
+  required placeholder="Mfano: 1.85">
 
-<input
-id="pick"
-placeholder="Mfano: Over 2.5">
-
-<input
-id="odd"
-type="number"
-step="0.01"
-placeholder="Odd mfano 1.85">
-
-<select id="oddType">
-
-<option value="VIP">
-VIP
-</option>
-
-<option value="FREE">
-FREE
-</option>
-
+<label for="oddType">Aina ya Odds</label>
+<select id="oddType" required>
+  <option value="VIP">VIP ODDS</option>
+  <option value="FREE">FREE ODDS</option>
 </select>
 
-<button
-class="green-button"
-onclick="addOdd()">
-
-➕ ONGEZA ODD
+<button class="primary" type="submit">ONGEZA ODDS</button>
 
 </button>
 
