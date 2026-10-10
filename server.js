@@ -114,11 +114,17 @@ app.get("/api/odds", function (req, res) {
 });
 
 // ===============================
-// PAYMENT
+// SUBMIT PAYMENT
 // ===============================
 
 app.post("/api/payment", function (req, res) {
-  const reference = String(req.body.reference || "").trim();
+  const reference = String(
+    (req.body && req.body.reference) || ""
+  ).trim();
+
+  const method = String(
+    (req.body && req.body.method) || ""
+  ).trim();
 
   if (!reference) {
     return res.status(400).json({
@@ -127,11 +133,18 @@ app.post("/api/payment", function (req, res) {
     });
   }
 
+  if (!Object.prototype.hasOwnProperty.call(
+    PAYMENT_NUMBERS, method
+  )) {
+    return res.status(400).json({
+      success: false,
+      message: "Chagua njia sahihi ya malipo."
+    });
+  }
+
   const exists = payments.some(function (payment) {
-    return (
-      payment.reference.toLowerCase() ===
-      reference.toLowerCase()
-    );
+    return String(payment.reference).toLowerCase() ===
+      reference.toLowerCase();
   });
 
   if (exists) {
@@ -144,19 +157,27 @@ app.post("/api/payment", function (req, res) {
   const payment = {
     id: Date.now(),
     reference: reference,
+    method: method,
     amount: VIP_PRICE,
-    phone: PAYMENT_NUMBER,
+    phone: PAYMENT_NUMBERS[method],
     status: "PENDING",
     createdAt: new Date().toISOString()
   };
 
   payments.unshift(payment);
 
-  res.json({
+  return res.status(201).json({
     success: true,
     message:
-      "Malipo yamepokelewa. Subiri Admin athibitishe.",
-    payment: payment
+      "Ombi la malipo limepokelewa. Subiri Admin athibitishe.",
+    payment: {
+      id: payment.id,
+      reference: payment.reference,
+      method: payment.method,
+      amount: payment.amount,
+      phone: payment.phone,
+      status: payment.status
+    }
   });
 });
 
