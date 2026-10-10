@@ -13,12 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 const ADMIN_PASSWORD =
   process.env.ADMIN_PASSWORD || "BADILISHA_PASSWORD_HAPA";
 
-const PAYMENT_NUMBERS = {
-  "M-Pesa": "0793401886",
-  "Airtel Money": "0692359311",
-  "HaloPesa": "0613431930"
-};
-
+const PAYMENT_NUMBER = "0793401886";
 const VIP_PRICE = 5000;
 
 // ===============================
@@ -114,17 +109,11 @@ app.get("/api/odds", function (req, res) {
 });
 
 // ===============================
-// SUBMIT PAYMENT
+// PAYMENT
 // ===============================
 
 app.post("/api/payment", function (req, res) {
-  const reference = String(
-    (req.body && req.body.reference) || ""
-  ).trim();
-
-  const method = String(
-    (req.body && req.body.method) || ""
-  ).trim();
+  const reference = String(req.body.reference || "").trim();
 
   if (!reference) {
     return res.status(400).json({
@@ -133,18 +122,11 @@ app.post("/api/payment", function (req, res) {
     });
   }
 
-  if (!Object.prototype.hasOwnProperty.call(
-    PAYMENT_NUMBERS, method
-  )) {
-    return res.status(400).json({
-      success: false,
-      message: "Chagua njia sahihi ya malipo."
-    });
-  }
-
   const exists = payments.some(function (payment) {
-    return String(payment.reference).toLowerCase() ===
-      reference.toLowerCase();
+    return (
+      payment.reference.toLowerCase() ===
+      reference.toLowerCase()
+    );
   });
 
   if (exists) {
@@ -157,27 +139,19 @@ app.post("/api/payment", function (req, res) {
   const payment = {
     id: Date.now(),
     reference: reference,
-    method: method,
     amount: VIP_PRICE,
-    phone: PAYMENT_NUMBERS[method],
+    phone: PAYMENT_NUMBER,
     status: "PENDING",
     createdAt: new Date().toISOString()
   };
 
   payments.unshift(payment);
 
-  return res.status(201).json({
+  res.json({
     success: true,
     message:
-      "Ombi la malipo limepokelewa. Subiri Admin athibitishe.",
-    payment: {
-      id: payment.id,
-      reference: payment.reference,
-      method: payment.method,
-      amount: payment.amount,
-      phone: payment.phone,
-      status: payment.status
-    }
+      "Malipo yamepokelewa. Subiri Admin athibitishe.",
+    payment: payment
   });
 });
 
