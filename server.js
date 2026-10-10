@@ -13,14 +13,14 @@ app.use(express.urlencoded({ extended: true }));
 const ADMIN_PASSWORD =
   process.env.ADMIN_PASSWORD || "BADILISHA_PASSWORD_HAPA";
 
-const method = String(req.body.method || "").trim();
+const PAYMENT_NUMBERS = {
+  "M-Pesa": "0793401886",
+  "Airtel Money": "0692359311",
+  "HaloPesa": "0613431930"
+};
 
-if (!PAYMENT_NUMBERS[method]) {
-  return res.status(400).json({
-    success: false,
-    message: "Chagua njia sahihi ya malipo."
-  });
-}
+const PAYMENT_NUMBER = PAYMENT_NUMBERS["M-Pesa"];
+const VIP_PRICE = 5000;
 
 const payment = {
   id: Date.now(),
@@ -32,8 +32,7 @@ const payment = {
   createdAt: new Date().toISOString()
 };
 
-const PAYMENT_NUMBER = PAYMENT_NUMBERS["M-Pesa"];
-const VIP_PRICE = 5000;
+
 
 // ===============================
 // DATA
@@ -132,47 +131,45 @@ app.get("/api/odds", function (req, res) {
 // ===============================
 
 app.post("/api/payment", function (req, res) {
-  const reference = String(req.body.reference || "").trim();
+const reference = String(req.body.reference || "").trim();
 
-  if (!reference) {
-    return res.status(400).json({
-      success: false,
-      message: "Weka Payment Reference."
-    });
-  }
-
-  const exists = payments.some(function (payment) {
-    return (
-      payment.reference.toLowerCase() ===
-      reference.toLowerCase()
-    );
+if (!reference) {
+  return res.status(400).json({
+    success: false,
+    message: "Weka Payment Reference."
   });
+}
 
-  if (exists) {
-    return res.status(409).json({
-      success: false,
-      message: "Reference hii tayari imetumwa."
-    });
-  }
-
-  const payment = {
-    id: Date.now(),
-    reference: reference,
-    amount: VIP_PRICE,
-    phone: PAYMENT_NUMBER,
-    status: "PENDING",
-    createdAt: new Date().toISOString()
-  };
-
-  payments.unshift(payment);
-
-  res.json({
-    success: true,
-    message:
-      "Malipo yamepokelewa. Subiri Admin athibitishe.",
-    payment: payment
-  });
+const exists = payments.some(function (payment) {
+  return payment.reference.toLowerCase() === reference.toLowerCase();
 });
+
+if (exists) {
+  return res.status(409).json({
+    success: false,
+    message: "Reference hii tayari imetumwa."
+  });
+}
+const method = String(req.body.method || "").trim();
+
+if (!PAYMENT_NUMBERS[method]) {
+  return res.status(400).json({
+    success: false,
+    message: "Chagua njia sahihi ya malipo."
+  });
+}
+
+const payment = {
+  id: Date.now(),
+  reference: reference,
+  method: method,
+  amount: VIP_PRICE,
+  phone: PAYMENT_NUMBERS[method],
+  status: "PENDING",
+  createdAt: new Date().toISOString()
+};
+
+
 
 // ===============================
 // PAYMENT STATUS
