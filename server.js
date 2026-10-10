@@ -13,10 +13,23 @@ app.use(express.urlencoded({ extended: true }));
 const ADMIN_PASSWORD =
   process.env.ADMIN_PASSWORD || "BADILISHA_PASSWORD_HAPA";
 
-const PAYMENT_NUMBERS = {
-  "M-Pesa": "0793401886",
-  "Airtel Money": "0692359311",
-  "HaloPesa": "0613441930"
+const method = String(req.body.method || "").trim();
+
+if (!PAYMENT_NUMBERS[method]) {
+  return res.status(400).json({
+    success: false,
+    message: "Chagua njia sahihi ya malipo."
+  });
+}
+
+const payment = {
+  id: Date.now(),
+  reference: reference,
+  method: method,
+  amount: VIP_PRICE,
+  phone: PAYMENT_NUMBERS[method],
+  status: "PENDING",
+  createdAt: new Date().toISOString()
 };
 
 const PAYMENT_NUMBER = PAYMENT_NUMBERS["M-Pesa"];
