@@ -116,15 +116,7 @@ app.post("/api/odds", requireAdmin, (req, res) => {
   });
 });
     req.body.prediction || req.body.pick || ""
-  ).trim();
-  const odd = Number(req.body.odd);
-
-  if (!match || !prediction || !Number.isFinite(odd) || odd < 1) {
-    return res.status(400).json({
-      success: false,
-      message: "Jaza mechi, utabiri na odd sahihi."
-    });
-  }
+  ).
 
   const item = {
     id: nextOddId++,
