@@ -818,21 +818,18 @@ img {
 
             <label for="prediction">Utabiri</label>
             <input id="prediction" required placeholder="Mfano: 1X">
+<label for="oddValue">Odd</label>
+<input id="oddValue" type="number" min="1" step="0.01"
+  required placeholder="Mfano: 1.85">
 
-            <label for="oddValue">Odd</label>
-            <input id="oddValue" type="number" min="1" step="0.01"
-              required placeholder="Mfano: 1.85">
+<label for="oddType">Aina ya Odds</label>
+<select id="oddType" required>
+  <option value="VIP">VIP ODDS</option>
+  <option value="FREE">FREE ODDS</option>
+</select>
 
-            <button class="primary" type="submit">ONGEZA ODDS</button>
-          </form>
-
-          <div id="addOddsMessage" class="message" aria-live="polite"></div>
-        </div>
-
-        <div class="card">
-          <h2>📋 Orodha ya Odds</h2>
-          <button type="button" class="small-button" onclick="loadAdminOdds()">
-            ONYESHA ODDS
+<button class="primary" type="submit">ONGEZA ODDS</button>
+            
           </button>
           <div id="adminOddsList"></div>
         </div>
