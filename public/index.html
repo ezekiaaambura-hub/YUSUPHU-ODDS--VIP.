@@ -1127,13 +1127,12 @@ img {
     document.getElementById("oddsForm").addEventListener("submit", async event => {
       event.preventDefault();
 
-      const payload = {
-        match: document.getElementById("match").value.trim(),
-        prediction: document.getElementById("prediction").value.trim(),
-        odd: Number(document.getElementById("oddValue").value)
-      };
-
-      try {
+   const payload = {
+  match: document.getElementById("match").value.trim(),
+  prediction: document.getElementById("prediction").value.trim(),
+  odd: Number(document.getElementById("oddValue").value),
+  type: document.getElementById("oddType").value
+};
         const response = await fetch("/api/odds", {
           method: "POST",
           headers: adminHeaders(true),
