@@ -69,7 +69,52 @@ app.get("/api/odds", (req, res) => {
 // ADD ODDS — ADMIN
 app.post("/api/odds", requireAdmin, (req, res) => {
   const match = String(req.body.match || "").trim();
+
   const prediction = String(
+    req.body.prediction || req.body.pick || ""
+  ).trim();
+
+  const odd = Number(req.body.odd);
+
+  const type = String(
+    req.body.type || req.body.status || "VIP"
+  ).trim().toUpperCase();
+
+  if (!match || !prediction || !Number.isFinite(odd) || odd < 1) {
+    return res.status(400).json({
+      success: false,
+      message: "Jaza mechi, utabiri na odd sahihi."
+    });
+  }
+
+  if (!["FREE", "VIP"].includes(type)) {
+    return res.status(400).json({
+      success: false,
+      message: "Chagua FREE ODDS au VIP ODDS."
+    });
+  }
+
+  const item = {
+    id: nextOddId++,
+    match,
+    prediction,
+    pick: prediction,
+    odd,
+    status: type,
+    type,
+    createdAt: new Date().toISOString()
+  };
+
+  odds.unshift(item);
+
+  return res.status(201).json({
+    success: true,
+    message: type === "FREE"
+      ? "FREE ODDS zimeongezwa."
+      : "VIP ODDS zimeongezwa.",
+    odd: item
+  });
+});
     req.body.prediction || req.body.pick || ""
   ).trim();
   const odd = Number(req.body.odd);
