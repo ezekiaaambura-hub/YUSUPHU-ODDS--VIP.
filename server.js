@@ -140,15 +140,17 @@ app.post("/api/payment", function (req, res) {
       success: false,
       message: "Reference hii tayari imetumwa."
     });
-  }
+  
 
   const payment = {
-    id: Date.now(),
-    reference: reference,
-    amount: VIP_PRICE,
-    phone: PAYMENT_NUMBER,
-    status: "PENDING",
-    createdAt: new Date().toISOString()
+  id: Date.now(),
+  reference: reference,
+  method: method,
+  amount: VIP_PRICE,
+  phone: PAYMENT_NUMBERS[method],
+  status: "PENDING",
+  createdAt: new Date().toISOString()
+
   };
 
   payments.unshift(payment);
