@@ -722,25 +722,60 @@ img {
           halisi kutoka kwenye ujumbe wa muamala.
         </p>
 
-        <form id="paymentForm">
-          <label for="paymentReference">Payment Reference</label>
-          <input
-            id="paymentReference"
-            name="reference"
-            type="text"
-            placeholder="Weka kumbukumbu ya muamala"
-            autocomplete="off"
-            required
-          >
+>
+<h2>💳 MALIPO YA VIP</h2>
 
-          <button class="primary" type="submit">
-            NIMEFANYA MALIPO
-          </button>
-        </form>
+<p>Weka malipo ya: <strong>TSh 5,000</strong></p>
 
-        <div id="paymentMessage" class="message" aria-live="polite"></div>
-      </div>
-    </section>
+<label for="paymentMethod">Chagua mtandao wa malipo:</label>
+
+<div class="network-options">
+  <label>
+    <input type="radio" name="method" value="M-Pesa" required>
+    🔴 M-Pesa
+  </label>
+
+  <label>
+    <input type="radio" name="method" value="Airtel Money" required>
+    🔴 Airtel Money
+  </label>
+
+  <label>
+    <input type="radio" name="method" value="HaloPesa" required>
+    🟢 HaloPesa
+  </label>
+</div>
+
+<div id="paymentNumber" class="card">
+  Chagua mtandao ili kuona namba ya malipo.
+</div>
+
+<h3>🧾 Payment Reference</h3>
+
+<p>
+  Baada ya kulipa, weka kumbukumbu halisi ya muamala
+  kutoka kwenye ujumbe uliopokea.
+</p>
+
+<form id="paymentForm">
+  <label for="paymentReference">Payment Reference</label>
+
+  <input
+    id="paymentReference"
+    name="reference"
+    type="text"
+    placeholder="Weka kumbukumbu ya muamala"
+    autocomplete="off"
+    required
+  >
+
+  <button class="primary" type="submit">
+    NIMEFANYA MALIPO
+  </button>
+</form>
+
+<div id="paymentMessage" class="message" aria-live="polite"></div>
+
 
     <!-- VIP -->
     <section id="vip" class="page">
