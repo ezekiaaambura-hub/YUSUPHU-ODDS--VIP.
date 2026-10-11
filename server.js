@@ -5,7 +5,6 @@ const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 // ===============================
 // SETTINGS
 // ===============================
@@ -21,6 +20,9 @@ const PAYMENT_NUMBERS = {
 
 const PAYMENT_NUMBER = PAYMENT_NUMBERS["M-Pesa"];
 const VIP_PRICE = 5000;
+
+
+
 
 const payment = {
   id: Date.now(),
