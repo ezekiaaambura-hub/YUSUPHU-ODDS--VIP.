@@ -10,11 +10,11 @@ const PAYMENT_NUMBER = "0793401886";
 const PAYMENT_AMOUNT = 5000;
 
 // Weka password yako ya Admin hapa
-const ADMIN_PASSWORD = "WEKA_PASSWORD_YAKO_HAPA";
-Yusuphu2026
+
+const ADMIN_PASSWORD = "Yusuphu2026";
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 // ===============================
 // DATA
 // ===============================
