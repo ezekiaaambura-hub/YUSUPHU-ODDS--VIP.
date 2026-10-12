@@ -2603,22 +2603,34 @@ app.post(
 
   }
 );
-
-
 // =================================
-// START SERVER
+// REJECT PAYMENT — ADMIN
 // =================================
 
-app.listen(
-  PORT,
-  "0.0.0.0",
-  () => {
+app.post(
+  "/api/payments/:id/reject",
+  requireAdmin,
+  (req, res) => {
+    const id = Number(req.params.id);
 
-    console.log(
-      APP_NAME +
-      " running on port " +
-      PORT
+    const payment = payments.find(
+      (item) => item.id === id
     );
 
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Malipo hayajapatikana."
+      });
+    }
+
+    payment.status = "REJECTED";
+
+    return res.json({
+      success: true,
+      message: "Malipo yamekataliwa.",
+      payment: payment
+    });
   }
 );
+
