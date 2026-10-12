@@ -98,7 +98,7 @@ app.get("/api/config", function (req, res) {
   res.json({
     success: true,
     price: VIP_PRICE,
-    paymentNumber: PAYMENT_NUMBER
+    paymentMethods: Object.keys(PAYMENT_NUMBERS)
   });
 });
 
