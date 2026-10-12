@@ -9,7 +9,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "BadilishaAdmin123!";
 const VIP_PRICE = 5000;
 const DATA_FILE = path.join(__dirname, "data.json");
 
-app.disable("x-powered-by");
+9app.disable("x-powered-by");
 app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -288,6 +288,8 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`YUSUPHU ODDS VIP inaendesha kwenye port ${PORT}`);
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`YUSUPHU ODDS VIP running on port ${PORT}`);
 });
