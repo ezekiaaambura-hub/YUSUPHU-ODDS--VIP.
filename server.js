@@ -83,10 +83,11 @@ function requireAdmin(req, res, next) {
 // API HEALTH
 // ===============================
 
-app.get("/api/health", function (req, res) {
+app.get("/api/config", function (req, res) {
   res.json({
     success: true,
-    app: "YUSUPHU ODDS VIP"
+    price: VIP_PRICE,
+    paymentMethods: Object.keys(PAYMENT_NUMBERS)
   });
 });
 
