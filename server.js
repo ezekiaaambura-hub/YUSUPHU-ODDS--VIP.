@@ -136,14 +136,28 @@ app.post("/api/payment", function (req, res) {
     });
   }
 
-  const payment = {
-    id: Date.now(),
-    reference: reference,
-    amount: VIP_PRICE,
-    phone: PAYMENT_NUMBER,
-    status: "PENDING",
-    createdAt: new Date().toISOString()
-  };
+
+  const method = String(
+  req.body.method || ""
+).trim();
+
+if (!PAYMENT_NUMBERS[method]) {
+  return res.status(400).json({
+    success: false,
+    message: "Chagua njia sahihi ya malipo."
+  });
+}
+
+const payment = {
+  id: Date.now(),
+  reference: reference,
+  method: method,
+  amount: VIP_PRICE,
+  phone: PAYMENT_NUMBERS[method],
+  status: "PENDING",
+  createdAt: new Date().toISOString()
+};
+  
 
   payments.unshift(payment);
 
