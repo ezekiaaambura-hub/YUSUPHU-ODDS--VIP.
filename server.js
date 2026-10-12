@@ -10,12 +10,10 @@ app.use(express.urlencoded({ extended: true }));
 // SETTINGS
 // ===============================
 
-const PAYMENT_NUMBERS = {
-  "M-Pesa": "0793401886",
-  "Airtel Money": "0692359311",
-  "HaloPesa": "0613431930"
-};
+const ADMIN_PASSWORD =
+  process.env.ADMIN_PASSWORD || "BADILISHA_PASSWORD_HAPA";
 
+const PAYMENT_NUMBER = "0793401886";
 const VIP_PRICE = 5000;
 
 // ===============================
@@ -83,11 +81,10 @@ function requireAdmin(req, res, next) {
 // API HEALTH
 // ===============================
 
-app.get("/api/config", function (req, res) {
+app.get("/api/health", function (req, res) {
   res.json({
     success: true,
-    price: VIP_PRICE,
-    paymentMethods: ["M-Pesa", "Airtel Money", "HaloPesa"]
+    app: "YUSUPHU ODDS VIP"
   });
 });
 
@@ -99,7 +96,7 @@ app.get("/api/config", function (req, res) {
   res.json({
     success: true,
     price: VIP_PRICE,
-    paymentMethods: Object.keys(PAYMENT_NUMBERS)
+    paymentNumber: PAYMENT_NUMBER
   });
 });
 
@@ -139,46 +136,24 @@ app.post("/api/payment", function (req, res) {
     });
   }
 
+  const payment = {
+    id: Date.now(),
+    reference: reference,
+    amount: VIP_PRICE,
+    phone: PAYMENT_NUMBER,
+    status: "PENDING",
+    createdAt: new Date().toISOString()
+  };
 
-  const method = String(
-  req.body.method || ""
-).trim();
-
-if (!PAYMENT_NUMBERS[method]) {
-  return res.status(400).json({
-    success: false,
-    message: "Chagua njia sahihi ya malipo."
-  });
-}
-
-const payment = {
-  id: Date.now(),
-  reference: reference,
-  method: method,
-  amount: VIP_PRICE,
-  phone: PAYMENT_NUMBERS[method],
-  status: "PENDING",
-  createdAt: new Date().toISOString()
-};
-  
   payments.unshift(payment);
 
   res.json({
     success: true,
     message:
-      "Taarifa ya malipo imepokelewa. Subiri Admin athibitishe.",
-    payment: {
-      id: payment.id,
-      reference: payment.reference,
-      method: payment.method,
-      amount: payment.amount,
-      status: payment.status,
-      createdAt: payment.createdAt
-    }
+      "Malipo yamepokelewa. Subiri Admin athibitishe.",
+    payment: payment
   });
 });
-  
-
 
 // ===============================
 // PAYMENT STATUS
