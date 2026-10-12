@@ -2603,22 +2603,20 @@ app.post(
 
   }
 );
-
-
-// =================================
+// ===============================
 // START SERVER
-// =================================
-
+// ===============================
 app.listen(
   PORT,
   "0.0.0.0",
   () => {
 
     console.log(
-      APP_NAME +
-      " running on port " +
+      "YUSUPHU ODDS VIP running on port " +
       PORT
     );
 
   }
 );
+
+
