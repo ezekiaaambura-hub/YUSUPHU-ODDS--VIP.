@@ -82,14 +82,14 @@ function requireAdmin(req, res, next) {
 // ===============================
 // API HEALTH
 // ===============================
+
 app.get("/api/config", function (req, res) {
   res.json({
     success: true,
     price: VIP_PRICE,
-    paymentMethods: Object.keys(PAYMENT_NUMBERS)
+    paymentMethods: ["M-Pesa", "Airtel Money", "HaloPesa"]
   });
 });
-
 
 // ===============================
 // CONFIG
