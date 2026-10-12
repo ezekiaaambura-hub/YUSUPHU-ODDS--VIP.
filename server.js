@@ -160,16 +160,24 @@ const payment = {
   createdAt: new Date().toISOString()
 };
   
-
   payments.unshift(payment);
 
   res.json({
     success: true,
     message:
-      "Malipo yamepokelewa. Subiri Admin athibitishe.",
-    payment: payment
+      "Taarifa ya malipo imepokelewa. Subiri Admin athibitishe.",
+    payment: {
+      id: payment.id,
+      reference: payment.reference,
+      method: payment.method,
+      amount: payment.amount,
+      status: payment.status,
+      createdAt: payment.createdAt
+    }
   });
 });
+  
+
 
 // ===============================
 // PAYMENT STATUS
