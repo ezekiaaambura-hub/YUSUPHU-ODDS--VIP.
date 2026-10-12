@@ -2633,4 +2633,14 @@ app.post(
     });
   }
 );
+// =================================
+// START SERVER — YUSUPHU ODDS VIP
+// =================================
 
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(
+    APP_NAME + " running on port " + PORT
+  );
+});
