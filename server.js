@@ -2,7 +2,7 @@ const express=require("express");
 const fs=require("fs");
 const path=require("path");
 const app=express();
-const PORT=process.env.PORT||3000;
+const PORT = process.env.PORT || 10000;
 const ADMIN_PASSWORD=process.env.ADMIN_PASSWORD||"YUSUPHU2026";
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
