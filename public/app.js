@@ -50,8 +50,7 @@
     });
   });
   $("menuToggle").addEventListener("click", () => $("mainNav").classList.toggle("open"));
-  $("year").textContent = new Date().getFullYear();
-
+if ($("year")) $("year").textContent = new Date().getFullYear();
   async function loadFreeOdds() {
     $("freeOddsList").innerHTML = '<div class="loading">Inapakia odds...</div>';
     try {
