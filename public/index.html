@@ -1,1 +1,211 @@
-<button data-page="payment" class="nav-button">VIP</button>
+<!doctype html>
+<html lang="sw">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#030806">
+  <meta name="description" content="YUSUPHU ODDS VIP - Free Odds, VIP na huduma kwa wateja.">
+  <title>YUSUPHU ODDS VIP</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="brand" href="#" data-page="home">
+      <span class="brand-mark">YO</span>
+      <span>YUSUPHU <b>ODDS VIP</b></span>
+    </a>
+
+    <button id="menuToggle" class="menu-toggle"
+      aria-label="Fungua menyu">☰</button>
+
+    <nav id="mainNav">
+      <button data-page="home" class="nav-button active">Home</button>
+      <button data-page="free" class="nav-button">Free Odds</button>
+      <button data-page="payment" class="nav-button">VIP</button>
+      <button data-page="admin" class="nav-button">Admin</button>
+    </nav>
+  </header>
+
+  <main class="container">
+
+    <!-- HOME -->
+    <section id="home" class="page active">
+      <div class="hero">
+        <div class="eyebrow">⚽ UTABIRI WA MICHEZO</div>
+
+        <h1>Karibu <span>YUSUPHU ODDS VIP</span></h1>
+
+        <p>
+          Angalia Free Odds, jiunge na VIP na fuatilia huduma zako
+          kwa urahisi.
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn primary" data-page="free">
+            Angalia Free Odds
+          </button>
+
+          <button class="btn secondary" data-page="payment">
+            Fungua VIP · TSh 5,000
+          </button>
+        </div>
+
+        <div class="hero-foot">
+          Tumia huduma kwa uwajibikaji. Utabiri si dhamana ya ushindi.
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature">
+          <div class="feature-icon">⚽</div>
+          <h2>Free Odds</h2>
+          <p>Angalia utabiri unaopatikana bure.</p>
+          <button class="text-button" data-page="free">Fungua →</button>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">⭐</div>
+          <h2>VIP Odds</h2>
+          <p>Omba ufikiaji wa VIP kwa TSh 5,000.</p>
+          <button class="text-button" data-page="payment">Jiunge →</button>
+        </article>
+
+        <article class="feature">
+          <div class="feature-icon">🔐</div>
+          <h2>Admin</h2>
+          <p>Usimamizi wa odds, malipo na mipangilio.</p>
+          <button class="text-button" data-page="admin">Ingia →</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- FREE ODDS -->
+    <section id="free" class="page">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">UTABIRI WA BURE</div>
+          <h1>Free Odds</h1>
+          <p>Mechi na utabiri uliowekwa na Admin.</p>
+        </div>
+
+        <button class="btn secondary small" id="refreshFree">
+          ↻ Sasisha
+        </button>
+      </div>
+
+      <div id="freeOddsList" class="odds-list">
+        <div class="loading">Inapakia odds...</div>
+      </div>
+    </section>
+
+    <!-- VIP NA MALIPO -->
+    <section id="payment" class="page">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">FUNGUA VIP</div>
+          <h1>Malipo ya VIP</h1>
+          <p>Bei ya kujiunga: <strong>TSh 5,000</strong></p>
+        </div>
+      </div>
+
+      <div class="payment-layout">
+        <div class="panel">
+          <h2>1. Chagua mtandao wa malipo</h2>
+          <p class="muted">
+            Chagua mtandao unaotumia.
+          </p>
+
+          <div class="network-grid">
+            <button class="network-choice" data-method="M-Pesa" type="button">
+              <span class="network-logo mpesa">M</span>
+              <span>M-Pesa</span>
+              <span class="radio-dot"></span>
+            </button>
+
+            <button class="network-choice" data-method="Airtel Money" type="button">
+              <span class="network-logo airtel">A</span>
+              <span>Airtel Money</span>
+              <span class="radio-dot"></span>
+            </button>
+
+            <button class="network-choice" data-method="HaloPesa" type="button">
+              <span class="network-logo halo">H</span>
+              <span>HaloPesa</span>
+              <span class="radio-dot"></span>
+            </button>
+          </div>
+
+          <p id="selectedNetwork" class="notice">
+            Chagua mtandao hapo juu.
+          </p>
+
+          <h2>2. Weka taarifa zako</h2>
+
+          <form id="paymentForm">
+            <label for="customerPhone">Namba yako ya simu</label>
+            <input
+              id="customerPhone"
+              type="tel"
+              inputmode="tel"
+              placeholder="07XXXXXXXX"
+              required
+            >
+
+            <label for="paymentReference">Payment Reference</label>
+            <input
+              id="paymentReference"
+              type="text"
+              placeholder="Kumbukumbu kutoka SMS ya muamala"
+              required
+              minlength="4"
+              maxlength="100"
+            >
+
+            <p class="hint">
+              Lipa TSh 5,000 kwa kutumia mtandao uliochagua.
+              Baada ya kulipa, nakili kumbukumbu halisi kutoka SMS.
+            </p>
+
+            <button class="btn primary full" type="submit">
+              NIMEFANYA MALIPO
+            </button>
+
+            <p id="paymentMessage" class="message" role="status"></p>
+          </form>
+        </div>
+
+        <div class="panel dark-panel">
+          <h2>3. Fungua VIP baada ya uthibitisho</h2>
+
+          <p class="muted">
+            Admin atakagua malipo yako. Ukishaidhinishwa,
+            weka namba ileile uliyotumia kuomba VIP.
+          </p>
+
+          <form id="vipCheckForm">
+            <label for="vipPhone">Namba yako ya simu</label>
+            <input
+              id="vipPhone"
+              type="tel"
+              inputmode="tel"
+              placeholder="07XXXXXXXX"
+              required
+            >
+
+            <button class="btn secondary full" type="submit">
+              ANGALIA VIP YANGU
+            </button>
+          </form>
+
+          <p id="vipAccessMessage" class="message" role="status"></p>
+          <div id="vipOddsList" class="odds-list compact"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="admin" class="page">
+      <div class="section-heading">
+        <div>
+          <
