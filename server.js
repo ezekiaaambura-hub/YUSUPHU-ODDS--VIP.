@@ -5,14 +5,25 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "YUSUPHU2026";
+const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!ADMIN_PASSWORD) {
   throw new Error("ADMIN_PASSWORD haijawekwa.");
 }
+
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL haijawekwa kwenye Render.");
+}
+
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -24,27 +35,9 @@ const dataFile = path.join(dataDir, "store.json");
 const initial = () => ({
   payments: [],
   odds: [
-    {
-      id: 1,
-      match: "Manchester United",
-      pick: "Double Chance",
-      odd: 1.50,
-      type: "FREE"
-    },
-    {
-      id: 2,
-      match: "Barcelona",
-      pick: "Over 1.5 Goals",
-      odd: 1.50,
-      type: "FREE"
-    },
-    {
-      id: 3,
-      match: "Real Madrid",
-      pick: "To Win",
-      odd: 1.60,
-      type: "FREE"
-    }
+    { id: 1, match: "Manchester United", pick: "Double Chance", odd: 1.50, type: "FREE" },
+    { id: 2, match: "Barcelona", pick: "Over 1.5 Goals", odd: 1.50, type: "FREE" },
+    { id: 3, match: "Real Madrid", pick: "To Win", odd: 1.60, type: "FREE" }
   ],
   settings: {
     paymentNumbers: {
@@ -89,52 +82,104 @@ function normalizeOdds(items) {
   return result;
 }
 
-function load() {
+function normalizeStore(old) {
+  const defaults = initial();
+  old = old && typeof old === "object" ? old : {};
+
+  return {
+    payments: Array.isArray(old.payments)
+      ? old.payments.map(p => ({
+          ...p,
+          status: String(p.status || "PENDING").toUpperCase()
+        }))
+      : [],
+    odds: normalizeOdds(
+      Array.isArray(old.odds) ? old.odds : defaults.odds
+    ),
+    settings: {
+      paymentNumbers: {
+        ...defaults.settings.paymentNumbers,
+        ...(old.settings?.paymentNumbers || {})
+      },
+      links: {
+        ...defaults.settings.links,
+        ...(old.settings?.links || {})
+      }
+    }
+  };
+}
+
+function loadLocalStore() {
   fs.mkdirSync(dataDir, { recursive: true });
 
   if (!fs.existsSync(dataFile)) {
-    const data = initial();
-    fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
-    return data;
+    return initial();
   }
+
+  const old = JSON.parse(fs.readFileSync(dataFile, "utf8"));
+  return normalizeStore(old);
+}
+
+let store;
+const adminTokens = new Map();
+
+async function initializeStore() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS yusuphu_app_store (
+      id INTEGER PRIMARY KEY,
+      data JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  const result = await pool.query(
+    "SELECT data FROM yusuphu_app_store WHERE id = 1"
+  );
+
+  if (result.rows.length > 0) {
+    store = normalizeStore(result.rows[0].data);
+    console.log("Data ya YUSUPHU ODDS VIP imepakiwa kutoka Neon.");
+    return;
+  }
+
+  // Jaribu kuhamisha data ya zamani ikiwa faili bado ipo.
+  let oldData;
 
   try {
-    const old = JSON.parse(fs.readFileSync(dataFile, "utf8"));
-    const defaults = initial();
-
-    return {
-      payments: Array.isArray(old.payments)
-        ? old.payments.map(p => ({
-            ...p,
-            status: String(p.status || "pending").toUpperCase()
-          }))
-        : [],
-      odds: normalizeOdds(old.odds || defaults.odds),
-      settings: {
-        paymentNumbers: {
-          ...defaults.settings.paymentNumbers,
-          ...(old.settings?.paymentNumbers || {})
-        },
-        links: {
-          ...defaults.settings.links,
-          ...(old.settings?.links || {})
-        }
-      }
-    };
+    oldData = loadLocalStore();
   } catch (error) {
-    console.error("Store haikusomeka:", error);
+    console.error("Imeshindwa kusoma data ya zamani:", error.message);
     throw error;
   }
+
+  store = normalizeStore(oldData);
+
+  await pool.query(
+    `INSERT INTO yusuphu_app_store (id, data)
+     VALUES (1, $1::jsonb)
+     ON CONFLICT (id) DO NOTHING`,
+    [JSON.stringify(store)]
+  );
+
+  const check = await pool.query(
+    "SELECT data FROM yusuphu_app_store WHERE id = 1"
+  );
+
+  store = normalizeStore(check.rows[0].data);
+  console.log("Data ya YUSUPHU ODDS VIP imeanzishwa kwenye Neon.");
 }
 
-let store = load();
+async function save() {
+  if (!store) throw new Error("Data haijapakiwa.");
 
-function save() {
-  fs.mkdirSync(dataDir, { recursive: true });
-  fs.writeFileSync(dataFile, JSON.stringify(store, null, 2));
+  await pool.query(
+    `INSERT INTO yusuphu_app_store (id, data, updated_at)
+     VALUES (1, $1::jsonb, NOW())
+     ON CONFLICT (id)
+     DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()`,
+    [JSON.stringify(store)]
+  );
 }
-
-const adminTokens = new Map();
 
 function auth(req, res, next) {
   const header = String(req.headers.authorization || "");
@@ -167,16 +212,15 @@ app.get("/", (req, res) => {
 app.get("/api/health", (req, res) => {
   res.json({
     success: true,
-    message: "YUSUPHU ODDS VIP iko Live."
+    message: "YUSUPHU ODDS VIP iko Live.",
+    database: "Neon PostgreSQL"
   });
 });
 
-// FREE ODDS
 app.get("/api/odds", (req, res) => {
   res.json(store.odds.filter(o => o.type === "FREE"));
 });
 
-// PAYMENT CONFIGURATION
 app.get("/api/config", (req, res) => {
   res.json({
     success: true,
@@ -184,8 +228,8 @@ app.get("/api/config", (req, res) => {
   });
 });
 
-// CUSTOMER PAYMENT SUBMISSION
-app.post("/api/payment", (req, res) => {
+// CUSTOMER PAYMENT
+app.post("/api/payment", async (req, res) => {
   try {
     const reference = String(req.body.reference || "").trim();
     const method = String(req.body.method || "").trim();
@@ -205,11 +249,9 @@ app.post("/api/payment", (req, res) => {
       });
     }
 
-    if (
-      store.payments.some(
-        p => String(p.reference).toLowerCase() === reference.toLowerCase()
-      )
-    ) {
+    if (store.payments.some(
+      p => String(p.reference).toLowerCase() === reference.toLowerCase()
+    )) {
       return res.status(409).json({
         success: false,
         message: "Payment Reference hii tayari imewasilishwa."
@@ -227,7 +269,7 @@ app.post("/api/payment", (req, res) => {
     };
 
     store.payments.unshift(payment);
-    save();
+    await save();
 
     res.json({
       success: true,
@@ -239,7 +281,6 @@ app.post("/api/payment", (req, res) => {
   }
 });
 
-// CHECK PAYMENT
 app.get("/api/payment/:reference", (req, res) => {
   const p = store.payments.find(
     x => String(x.reference).toLowerCase() ===
@@ -256,7 +297,6 @@ app.get("/api/payment/:reference", (req, res) => {
   res.json({ success: true, payment: p });
 });
 
-// VIP ACCESS BY PHONE
 app.get("/api/vip/access", (req, res) => {
   const phone = String(req.query.phone || "").trim();
 
@@ -279,7 +319,6 @@ app.get("/api/vip/access", (req, res) => {
   });
 });
 
-// VIP ACCESS BY REFERENCE
 app.get("/api/vip/:reference", (req, res) => {
   const payment = store.payments.find(
     p =>
@@ -316,22 +355,15 @@ app.post("/api/admin/login", (req, res) => {
   const token = crypto.randomBytes(32).toString("hex");
   adminTokens.set(token, Date.now());
 
-  res.json({
-    success: true,
-    token,
-    message: "Umeingia Admin."
-  });
+  res.json({ success: true, token, message: "Umeingia Admin." });
 });
 
-// ADMIN LOGOUT
 app.post("/api/admin/logout", auth, (req, res) => {
   const token = String(req.headers.authorization || "").slice(7);
   adminTokens.delete(token);
-
   res.json({ success: true, message: "Umetoka kwenye Admin." });
 });
 
-// ADMIN DASHBOARD DATA
 app.get("/api/admin/data", auth, (req, res) => {
   res.json({
     success: true,
@@ -341,216 +373,241 @@ app.get("/api/admin/data", auth, (req, res) => {
   });
 });
 
-// ADMIN PAYMENT STATUS
-app.patch("/api/admin/payments/:id", auth, (req, res) => {
-  const status = String(req.body.status || "").toUpperCase();
-
-  if (!["APPROVED", "REJECTED", "PENDING"].includes(status)) {
-    return res.status(400).json({
-      success: false,
-      message: "Hali ya malipo si sahihi."
-    });
-  }
-
-  const payment = store.payments.find(
-    p => p.id === Number(req.params.id)
-  );
-
-  if (!payment) {
-    return res.status(404).json({
-      success: false,
-      message: "Malipo hayajapatikana."
-    });
-  }
-
-  payment.status = status;
-  payment.updatedAt = new Date().toISOString();
-  save();
-
-  res.json({
-    success: true,
-    message: "Hali ya malipo imebadilishwa.",
-    payment
-  });
-});
-
 app.get("/api/admin/payments", auth, (req, res) => {
   res.json({ success: true, payments: store.payments });
 });
 
-app.post("/api/admin/payments/:id/approve", auth, (req, res) => {
-  const payment = store.payments.find(
-    p => p.id === Number(req.params.id)
-  );
+app.patch("/api/admin/payments/:id", auth, async (req, res) => {
+  try {
+    const status = String(req.body.status || "").toUpperCase();
 
-  if (!payment) {
-    return res.status(404).json({
-      success: false,
-      message: "Malipo hayajapatikana."
+    if (!["APPROVED", "REJECTED", "PENDING"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Hali ya malipo si sahihi."
+      });
+    }
+
+    const payment = store.payments.find(
+      p => p.id === Number(req.params.id)
+    );
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Malipo hayajapatikana."
+      });
+    }
+
+    payment.status = status;
+    payment.updatedAt = new Date().toISOString();
+    await save();
+
+    res.json({
+      success: true,
+      message: "Hali ya malipo imebadilishwa.",
+      payment
     });
+  } catch (error) {
+    adminError(res, error);
   }
-
-  payment.status = "APPROVED";
-  payment.approvedAt = new Date().toISOString();
-  save();
-
-  res.json({ success: true, payment });
 });
 
-app.post("/api/admin/payments/:id/reject", auth, (req, res) => {
-  const payment = store.payments.find(
-    p => p.id === Number(req.params.id)
-  );
+app.post("/api/admin/payments/:id/approve", auth, async (req, res) => {
+  try {
+    const payment = store.payments.find(
+      p => p.id === Number(req.params.id)
+    );
 
-  if (!payment) {
-    return res.status(404).json({
-      success: false,
-      message: "Malipo hayajapatikana."
-    });
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Malipo hayajapatikana."
+      });
+    }
+
+    payment.status = "APPROVED";
+    payment.approvedAt = new Date().toISOString();
+    await save();
+
+    res.json({ success: true, payment });
+  } catch (error) {
+    adminError(res, error);
   }
+});
 
-  payment.status = "REJECTED";
-  payment.rejectedAt = new Date().toISOString();
-  save();
+app.post("/api/admin/payments/:id/reject", auth, async (req, res) => {
+  try {
+    const payment = store.payments.find(
+      p => p.id === Number(req.params.id)
+    );
 
-  res.json({ success: true, payment });
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Malipo hayajapatikana."
+      });
+    }
+
+    payment.status = "REJECTED";
+    payment.rejectedAt = new Date().toISOString();
+    await save();
+
+    res.json({ success: true, payment });
+  } catch (error) {
+    adminError(res, error);
+  }
 });
 
 // ADD ODDS
-app.post("/api/admin/odds", auth, (req, res) => {
-  const match = String(req.body.match || "").trim();
-  const pick = String(req.body.pick || req.body.prediction || "").trim();
-  const odd = Number(req.body.odd);
-  const type = String(req.body.type || "FREE").toUpperCase();
+app.post("/api/admin/odds", auth, async (req, res) => {
+  try {
+    const match = String(req.body.match || "").trim();
+    const pick = String(req.body.pick || req.body.prediction || "").trim();
+    const odd = Number(req.body.odd);
+    const type = String(req.body.type || "FREE").toUpperCase();
 
-  if (
-    !match ||
-    !pick ||
-    !Number.isFinite(odd) ||
-    odd <= 1 ||
-    !["FREE", "VIP"].includes(type)
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Weka mechi, utabiri, odd na aina sahihi."
-    });
+    if (!match || !pick || !Number.isFinite(odd) ||
+        odd <= 1 || !["FREE", "VIP"].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Weka mechi, utabiri, odd na aina sahihi."
+      });
+    }
+
+    const item = { id: Date.now(), match, pick, odd, type };
+    store.odds.unshift(item);
+    await save();
+
+    res.json({ success: true, message: "Odd imeongezwa.", odd: item });
+  } catch (error) {
+    adminError(res, error);
   }
-
-  const item = { id: Date.now(), match, pick, odd, type };
-  store.odds.unshift(item);
-  save();
-
-  res.json({ success: true, message: "Odd imeongezwa.", odd: item });
 });
 
-// LIST ODDS FOR ADMIN
 app.get("/api/admin/odds", auth, (req, res) => {
   res.json({ success: true, odds: store.odds });
 });
 
-// EDIT ODDS
-app.put("/api/admin/odds/:id", auth, (req, res) => {
-  const item = store.odds.find(o => o.id === Number(req.params.id));
+app.put("/api/admin/odds/:id", auth, async (req, res) => {
+  try {
+    const item = store.odds.find(o => o.id === Number(req.params.id));
 
-  if (!item) {
-    return res.status(404).json({
-      success: false,
-      message: "Odd haijapatikana."
-    });
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Odd haijapatikana."
+      });
+    }
+
+    const match = String(req.body.match || "").trim();
+    const pick = String(req.body.pick || "").trim();
+    const odd = Number(req.body.odd);
+    const type = String(req.body.type || "").toUpperCase();
+
+    if (!match || !pick || !Number.isFinite(odd) ||
+        odd <= 1 || !["FREE", "VIP"].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Taarifa za odd si sahihi."
+      });
+    }
+
+    Object.assign(item, { match, pick, odd, type });
+    await save();
+
+    res.json({ success: true, message: "Odd imehaririwa.", odd: item });
+  } catch (error) {
+    adminError(res, error);
   }
-
-  const match = String(req.body.match || "").trim();
-  const pick = String(req.body.pick || "").trim();
-  const odd = Number(req.body.odd);
-  const type = String(req.body.type || "").toUpperCase();
-
-  if (
-    !match ||
-    !pick ||
-    !Number.isFinite(odd) ||
-    odd <= 1 ||
-    !["FREE", "VIP"].includes(type)
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Taarifa za odd si sahihi."
-    });
-  }
-
-  Object.assign(item, { match, pick, odd, type });
-  save();
-
-  res.json({ success: true, message: "Odd imehaririwa.", odd: item });
 });
 
-// DELETE ODDS
-app.delete("/api/admin/odds/:id", auth, (req, res) => {
-  const index = store.odds.findIndex(
-    o => o.id === Number(req.params.id)
-  );
+app.delete("/api/admin/odds/:id", auth, async (req, res) => {
+  try {
+    const index = store.odds.findIndex(
+      o => o.id === Number(req.params.id)
+    );
 
-  if (index === -1) {
-    return res.status(404).json({
-      success: false,
-      message: "Odd haijapatikana."
-    });
+    if (index === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Odd haijapatikana."
+      });
+    }
+
+    store.odds.splice(index, 1);
+    await save();
+
+    res.json({ success: true, message: "Odd imefutwa." });
+  } catch (error) {
+    adminError(res, error);
   }
-
-  store.odds.splice(index, 1);
-  save();
-
-  res.json({ success: true, message: "Odd imefutwa." });
 });
 
 // ADMIN SETTINGS
-app.put("/api/admin/settings", auth, (req, res) => {
-  const numbers = req.body.paymentNumbers || {};
-  const links = req.body.links || {};
+app.put("/api/admin/settings", auth, async (req, res) => {
+  try {
+    const numbers = req.body.paymentNumbers || {};
+    const links = req.body.links || {};
 
-  for (const key of ["M-Pesa", "Airtel Money", "HaloPesa"]) {
-    const value = String(numbers[key] || "").trim();
+    for (const key of ["M-Pesa", "Airtel Money", "HaloPesa"]) {
+      const value = String(numbers[key] || "").trim();
 
-    if (!/^[0-9+\s-]{9,20}$/.test(value)) {
-      return res.status(400).json({
-        success: false,
-        message: "Namba ya " + key + " si sahihi."
-      });
-    }
-  }
-
-  for (const key of ["GAL Sport", "Betika"]) {
-    try {
-      const url = new URL(String(links[key] || ""));
-      if (url.protocol !== "https:" && url.protocol !== "http:") {
-        throw new Error("URL si sahihi");
+      if (!/^[0-9+\s-]{9,20}$/.test(value)) {
+        return res.status(400).json({
+          success: false,
+          message: "Namba ya " + key + " si sahihi."
+        });
       }
-    } catch {
-      return res.status(400).json({
-        success: false,
-        message: "Kiungo cha " + key + " si sahihi."
-      });
     }
+
+    for (const key of ["GAL Sport", "Betika"]) {
+      try {
+        const url = new URL(String(links[key] || ""));
+        if (url.protocol !== "https:" && url.protocol !== "http:") {
+          throw new Error("URL si sahihi");
+        }
+      } catch {
+        return res.status(400).json({
+          success: false,
+          message: "Kiungo cha " + key + " si sahihi."
+        });
+      }
+    }
+
+    store.settings.paymentNumbers = {
+      "M-Pesa": String(numbers["M-Pesa"]).trim(),
+      "Airtel Money": String(numbers["Airtel Money"]).trim(),
+      "HaloPesa": String(numbers["HaloPesa"]).trim()
+    };
+
+    store.settings.links = {
+      "GAL Sport": String(links["GAL Sport"]).trim(),
+      "Betika": String(links["Betika"]).trim()
+    };
+
+    await save();
+
+    res.json({
+      success: true,
+      message: "Mipangilio imehifadhiwa."
+    });
+  } catch (error) {
+    adminError(res, error);
   }
-
-  store.settings.paymentNumbers = {
-    "M-Pesa": String(numbers["M-Pesa"]).trim(),
-    "Airtel Money": String(numbers["Airtel Money"]).trim(),
-    "HaloPesa": String(numbers["HaloPesa"]).trim()
-  };
-
-  store.settings.links = {
-    "GAL Sport": String(links["GAL Sport"]).trim(),
-    "Betika": String(links["Betika"]).trim()
-  };
-
-  save();
-
-  res.json({
-    success: true,
-    message: "Mipangilio imehifadhiwa."
-  });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("YUSUPHU ODDS VIP running on port " + PORT);
-});
+async function start() {
+  try {
+    await initializeStore();
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log("YUSUPHU ODDS VIP running on port " + PORT);
+    });
+  } catch (error) {
+    console.error("Imeshindwa kuanzisha YUSUPHU ODDS VIP:", error);
+    process.exit(1);
+  }
+}
+
+start();
