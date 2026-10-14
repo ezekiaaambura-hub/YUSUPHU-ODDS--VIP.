@@ -331,3 +331,20 @@ footer {
     font-size: 14px;
   }
      }
+/* FICHA SEHEMU ZILIZOWEKWA HIDDEN */
+.hidden {
+  display: none !important;
+}
+
+/* MIPANGILIO YA ADMIN */
+#adminDashboard.hidden,
+#adminLoginPanel.hidden {
+  display: none !important;
+}
+
+/* VIUNGO VYA GAL SPORT NA BETIKA */
+#adminLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
