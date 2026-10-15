@@ -12,7 +12,7 @@
   }
 
   nav button,
-  #mainNav button,
+  
   nav a,
   #mainNav a {
     width: 100%;
@@ -27,8 +27,8 @@
     border-radius: 10px;
     font-size: 15px;
     font-weight: 700;
-  }   
-    <!-- HUDUMA KWA WATEJA -->
+  }
+}<!-- HUDUMA KWA WATEJA -->
 <section class="customer-service" id="customerService">
   <h2>HUDUMA KWA WATEJA</h2>
   <p>Wasiliana nasi kwa msaada wa YUSUPHU ODDS VIP.</p>
