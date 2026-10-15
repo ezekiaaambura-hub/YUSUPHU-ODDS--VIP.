@@ -28,4 +28,25 @@
     font-size: 15px;
     font-weight: 700;
   }   
-    <
+    <!-- HUDUMA KWA WATEJA -->
+<section class="customer-service" id="customerService">
+  <h2>HUDUMA KWA WATEJA</h2>
+  <p>Wasiliana nasi kwa msaada wa YUSUPHU ODDS VIP.</p>
+
+  <p>
+    <strong>WhatsApp: 0793401886</strong>
+  </p>
+  <a class="btn secondary"
+     href="https://wa.me/255793401886"
+     target="_blank"
+     rel="noopener noreferrer">
+    💬 Tuma WhatsApp
+  </a>
+
+  <p>
+    <strong>Simu ya kawaida: 0613441930</strong>
+  </p>
+  <a class="btn primary" href="tel:0613441930">
+    📞 Piga Simu
+  </a>
+</section>
