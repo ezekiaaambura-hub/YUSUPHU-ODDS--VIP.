@@ -34,3 +34,19 @@
     font-size: 17px;
   }
 }
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--premium-bg);
+  color: var(--premium-text);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.topbar {
+  background: rgba(3, 12, 8, 0.97);
+  border-bottom: 1px solid rgba(0, 230, 118, 0.25);
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+  }
