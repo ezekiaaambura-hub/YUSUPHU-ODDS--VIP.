@@ -596,7 +596,107 @@ app.put("/api/admin/settings", auth, async (req, res) => {
     adminError(res, error);
   }
 });
+// API-FOOTBALL: CACHE YA MECHI
+const footballFixturesCache = new Map();
 
+// PATA MECHI RASMI KWA TAREHE (ADMIN PEKEE)
+app.get("/api/admin/football/fixtures", auth, async (req, res) => {
+  try {
+    const apiKey = process.env.API_FOOTBALL_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({
+        success: false,
+        message: "API_FOOTBALL_KEY haijawekwa kwenye Render."
+      });
+    }
+
+    const date = String(req.query.date || "").trim();
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({
+        success: false,
+        message: "Weka tarehe kwa mfumo YYYY-MM-DD."
+      });
+    }
+
+    const cached = footballFixturesCache.get(date);
+
+    if (cached && cached.expiresAt > Date.now()) {
+      return res.json({
+        success: true,
+        cached: true,
+        date,
+        fixtures: cached.fixtures
+      });
+    }
+
+    const url = new URL(
+      "https://v3.football.api-sports.io/fixtures"
+    );
+
+    url.searchParams.set("date", date);
+    url.searchParams.set("timezone", "Africa/Dar_es_Salaam");
+
+    const response = await fetch(url, {
+      headers: {
+        "x-apisports-key": apiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(502).json({
+        success: false,
+        message: "API-Football haikujibu kwa mafanikio."
+      });
+    }
+
+    const data = await response.json();
+
+    if (data.errors && Object.keys(data.errors).length > 0) {
+      console.error("API-Football errors:", data.errors);
+
+      return res.status(502).json({
+        success: false,
+        message: "API-Football imerudisha hitilafu. Kagua mipangilio."
+      });
+    }
+
+    const fixtures = (data.response || []).map(f => ({
+      fixtureId: f.fixture.id,
+      date: f.fixture.date,
+      status: f.fixture.status.short,
+      leagueId: f.league.id,
+      league: f.league.name,
+      country: f.league.country,
+      homeTeam: f.teams.home.name,
+      awayTeam: f.teams.away.name,
+      homeGoals: f.goals.home,
+      awayGoals: f.goals.away
+    }));
+
+    footballFixturesCache.set(date, {
+      fixtures,
+      expiresAt: Date.now() + 10 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      cached: false,
+      date,
+      count: fixtures.length,
+      fixtures
+    });
+  } catch (error) {
+    console.error("Football fixtures error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Imeshindikana kupata mechi. Jaribu tena baadaye."
+    });
+  }
+});
 async function start() {
   try {
     await initializeStore();
